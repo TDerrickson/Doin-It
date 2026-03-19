@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TGFC Foodservice CRM</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #1E2A5E;
+      --navy-deep: #141C42;
+      --navy-mid: #2A3A7A;
+      --navy-light: #3A4F9E;
+      --gold: #C9A84C;
+      --gold-light: #E8C96A;
+      --gold-pale: #F7EDD0;
+      --bg: #F4F5F7;
+      --card: #FFFFFF;
+      --border: rgba(0,0,0,0.08);
+      --text-primary: #1A1A2E;
+      --text-secondary: #6B7280;
+      --surface: #F9FAFB;
+    }
+
+    body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: var(--text-primary); }
+
+    /* ── APP SHELL ── */
+    .app { display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { width: 210px; flex-shrink: 0; background: var(--navy-deep); display: flex; flex-direction: column; }
+    .sidebar-header { padding: 20px 16px 18px; border-bottom: 1px solid rgba(201,168,76,0.2); display: flex; align-items: center; gap: 12px; }
+    .sidebar-logo { width: 46px; height: 46px; flex-shrink: 0; }
+    .sidebar-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .sidebar-brand { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.25; }
+    .sidebar-sub { font-size: 10px; color: var(--gold); letter-spacing: 1.2px; text-transform: uppercase; margin-top: 2px; }
+    .nav-section { padding: 14px 0; flex: 1; }
+    .nav-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 0 16px 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; cursor: pointer; font-size: 13px; color: rgba(255,255,255,0.6); transition: all 0.15s; border-left: 2px solid transparent; user-select: none; }
+    .nav-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    .nav-item.active { color: #fff; background: rgba(201,168,76,0.12); border-left-color: var(--gold); }
+    .nav-icon { font-size: 14px; width: 18px; text-align: center; opacity: 0.7; }
+    .nav-item.active .nav-icon { opacity: 1; }
+
+    /* ── MAIN ── */
+    .main { flex: 1; overflow-y: auto; }
+    .main::-webkit-scrollbar { width: 5px; }
+    .main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .view { display: none; padding: 26px 28px; }
+    .view.active { display: block; }
+
+    /* ── PAGE HEADER ── */
+    .page-header { margin-bottom: 22px; display: flex; align-items: flex-end; justify-content: space-between; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
+    .page-sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+    .header-badge { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--navy); background: var(--gold-pale); border: 1px solid var(--gold); border-radius: 20px; padding: 5px 13px; }
+    .header-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+
+    /* ── KPI CARDS ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 13px; margin-bottom: 20px; }
+    .kpi-card { background: var(--card); border: 0.5px solid var(--border); border-radius: 10px; padding: 16px 18px; position: relative; overflow: hidden; }
+    .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: linear-gradient(90deg, var(--navy) 0%, var(--gold) 100%); }
+    .kpi-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .kpi-value { font-size: 32px; font-weight: 700; color: var(--navy); }
+    .kpi-sub { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+
+    /* ── PANELS ── */
+    .two-col { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; margin-bottom: 14px; }
+    .panel { background: var(--card); border: 0.5px solid var(--border); border-radius: 10px; padding: 17px 20px; }
+    .panel-title { font-size: 11px; font-weight: 700; color: var(--text-primary); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.8px; }
+    .pipeline-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .pipeline-label { font-size: 11px; color: var(--text-secondary); width: 78px; flex-shrink: 0; }
+    .pipeline-bar-wrap { flex: 1; background: var(--surface); border-radius: 3px; height: 5px; overflow: hidden; }
+    .pipeline-bar { height: 100%; border-radius: 3px; }
+    .pipeline-count { font-size: 11px; font-weight: 600; color: var(--text-primary); width: 20px; text-align: right; flex-shrink: 0; }
+    .state-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+    .state-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 5px 8px; background: var(--surface); border-radius: 5px; }
+    .state-name { color: var(--text-primary); font-weight: 600; }
+    .state-cnt { color: var(--navy); font-weight: 700; }
+
+    /* ── BADGES ── */
+    .status-badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+
+    /* ── TOOLBAR ── */
+    .toolbar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; }
+    .tb-search { flex: 1; padding: 8px 12px; border: 0.5px solid var(--border); border-radius: 8px; font-size: 13px; background: var(--card); color: var(--text-primary); outline: none; }
+    .tb-search:focus { border-color: var(--navy-light); }
+    .filter-select { padding: 8px 12px; border: 0.5px solid var(--border); border-radius: 8px; font-size: 12px; background: var(--card); color: var(--text-primary); outline: none; cursor: pointer; }
+
+    /* ── ACCOUNTS GRID ── */
+    .accounts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 12px; }
+    .acct-card { background: var(--card); border: 0.5px solid var(--border); border-radius: 10px; padding: 15px; cursor: pointer; transition: border-color 0.15s; }
+    .acct-card:hover { border-color: var(--navy-light); }
+    .acct-card-header { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 11px; }
+    .acct-card-avatar { width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: #EEF1FB; color: var(--navy); }
+    .acct-card-name { font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.3; }
+    .acct-card-loc { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .acct-card-divider { border: none; border-top: 0.5px solid var(--border); margin: 9px 0; }
+    .acct-card-contact { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+    .acct-card-contact strong { color: var(--text-primary); font-weight: 600; }
+    .acct-card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 9px; }
+
+    /* ── CONTACTS TABLE ── */
+    .contacts-table-wrap { background: var(--card); border: 0.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .ct-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .ct-table thead tr { background: var(--navy-deep); }
+    .ct-table th { padding: 12px 16px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: rgba(255,255,255,0.6); white-space: nowrap; }
+    .ct-table th:first-child { color: var(--gold-light); }
+    .ct-table tbody tr { border-bottom: 0.5px solid var(--border); cursor: pointer; transition: background 0.1s; }
+    .ct-table tbody tr:last-child { border-bottom: none; }
+    .ct-table tbody tr:hover { background: var(--surface); }
+    .ct-table td { padding: 11px 16px; vertical-align: middle; }
+    .ct-company { font-weight: 600; font-size: 13px; }
+    .ct-sub { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+    .ct-contact-cell { display: flex; align-items: center; gap: 9px; }
+    .ct-avatar { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; background: #EEF1FB; color: var(--navy); }
+    .ct-name { font-weight: 600; font-size: 13px; }
+    .ct-title { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+    .ct-phone { color: var(--text-secondary); font-size: 12px; }
+    .ct-arrow { color: var(--text-secondary); font-size: 16px; opacity: 0.3; text-align: center; }
+    .ct-table tbody tr:hover .ct-arrow { opacity: 1; color: var(--navy); }
+
+    /* ── PROFILE ── */
+    .back-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-secondary); cursor: pointer; margin-bottom: 14px; background: none; border: none; }
+    .back-btn:hover { color: var(--navy); }
+    .profile-header { background: var(--card); border: 0.5px solid var(--border); border-radius: 12px; padding: 24px 26px; margin-bottom: 14px; display: flex; gap: 18px; align-items: flex-start; position: relative; overflow: hidden; }
+    .profile-header::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background: linear-gradient(90deg, var(--navy-deep) 0%, var(--navy-light) 50%, var(--gold) 100%); }
+    .profile-avatar { width: 54px; height: 54px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; background: #EEF1FB; color: var(--navy); margin-top: 4px; }
+    .profile-name { font-size: 21px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.2px; }
+    .profile-loc { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+    .profile-badges { display: flex; gap: 7px; margin-top: 10px; flex-wrap: wrap; }
+    .info-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; margin-bottom: 14px; }
+    .info-panel { background: var(--card); border: 0.5px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+    .info-panel-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; color: var(--navy); margin-bottom: 12px; }
+    .info-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+    .info-row:last-child { border-bottom: none; }
+    .info-key { color: var(--text-secondary); }
+    .info-val { color: var(--text-primary); font-weight: 600; text-align: right; max-width: 58%; word-break: break-word; }
+    .info-val a { color: var(--navy-light); text-decoration: none; }
+    .notes-panel { background: var(--card); border: 0.5px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; }
+    .notes-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; color: var(--navy); margin-bottom: 10px; }
+    .notes-text { font-size: 13px; color: var(--text-secondary); line-height: 1.75; font-style: italic; }
+    .notes-empty { font-size: 13px; color: var(--text-secondary); opacity: 0.45; font-style: italic; }
+    .edit-btn { padding: 8px 16px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; border: 0.5px solid var(--border); background: var(--card); color: var(--text-primary); transition: background 0.12s; }
+    .edit-btn:hover { background: var(--surface); }
+    .save-btn { padding: 8px 18px; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; background: var(--navy-deep); color: #fff; }
+    .save-btn:hover { background: var(--navy); }
+    .edit-field { width: 100%; border: 0.5px solid var(--border); border-radius: 6px; padding: 6px 9px; font-size: 13px; background: var(--surface); color: var(--text-primary); outline: none; font-family: inherit; }
+    .edit-field:focus { border-color: var(--navy-light); }
+    select.edit-field { cursor: pointer; }
+    textarea.edit-field { min-height: 80px; resize: vertical; }
+    .no-contact-tag { cursor: pointer; padding: 5px 11px; border-radius: 6px; background: var(--surface); border: 0.5px solid var(--border); font-size: 12px; color: var(--text-primary); display: inline-flex; align-items: center; gap: 5px; }
+    .no-contact-tag:hover { border-color: var(--navy-light); }
+
+    /* ── CAMPAIGNS ── */
+    .campaign-layout { display: grid; grid-template-columns: 280px minmax(0,1fr); gap: 16px; min-height: 540px; }
+    .campaign-list { display: flex; flex-direction: column; gap: 10px; }
+    .campaign-card { background: var(--card); border: 0.5px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: border-color 0.15s; }
+    .campaign-card:hover { border-color: var(--navy-light); }
+    .campaign-card.active { border-color: var(--gold); background: var(--gold-pale); }
+    .campaign-tag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 2px 8px; border-radius: 20px; margin-bottom: 8px; }
+    .campaign-title { font-size: 13px; font-weight: 700; color: var(--text-primary); line-height: 1.3; margin-bottom: 4px; }
+    .campaign-card.active .campaign-title { color: var(--navy-deep); }
+    .campaign-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+    .campaign-card.active .campaign-desc { color: var(--navy); opacity: 0.75; }
+    .email-preview { background: var(--card); border: 0.5px solid var(--border); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+    .email-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 0.5px solid var(--border); background: var(--surface); }
+    .email-toolbar-left { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .copy-btn { padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; background: var(--navy-deep); color: #fff; transition: opacity 0.15s; }
+    .copy-btn:hover { opacity: 0.85; }
+    .copy-btn.copied { background: #16A34A; }
+    .email-meta { padding: 14px 18px; border-bottom: 0.5px solid var(--border); display: flex; flex-direction: column; gap: 7px; }
+    .email-meta-row { display: flex; align-items: baseline; gap: 10px; font-size: 13px; }
+    .email-meta-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); width: 52px; flex-shrink: 0; }
+    .email-meta-val { color: var(--text-primary); font-weight: 600; }
+    .email-meta-val.subject { color: var(--navy); font-size: 14px; font-weight: 700; }
+    .email-body { padding: 22px 24px; flex: 1; font-size: 14px; line-height: 1.85; color: var(--text-primary); white-space: pre-wrap; font-family: Georgia, 'Times New Roman', serif; overflow-y: auto; max-height: 420px; }
+    .email-body .placeholder { background: var(--gold-pale); border: 1px solid var(--gold); border-radius: 4px; padding: 1px 5px; font-size: 12px; font-family: -apple-system, sans-serif; font-weight: 700; color: var(--navy); }
+    .email-footer { padding: 11px 18px; border-top: 0.5px solid var(--border); background: var(--surface); font-size: 11px; color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCACDAOEDASIAAhEBAxEB/8QAHAABAAIDAQEBAAAAAAAAAAAAAAYHBAUIAwIB/8QASRAAAQMDAgMFAwcJBAkFAAAAAQIDBAAFEQYSByExCBNBUWEUInEjMkJSgZGhFRYzN2J1grG0NDZysxclQ1SDkpTD0iRzo7LR/8QAGQEBAAMBAQAAAAAAAAAAAAAAAAECAwQF/8QAKxEAAwACAgEBBgYDAAAAAAAAAAECAxESMSFBBBMyUYHwFCIjYbHRNKHB/9oADAMBAAIRAxEAPwDsulKUApSlAKUpQClKUApWn1ddnbVah7GhLtxlOCNBaV0W8rpn9lIBUfRJrWNRNUWJCHY05zUbG3MiPKKG392OamlgBOCfoKx6KHSpSBK6VoImsLC66I8qWbZK6GPPQWHM+m7kr4pJFbYXCCUbxNjFH1u9Tj+dNMGTQ8q0M3V9gjumOzOE+V0EaCkyHCfgjOPicCtVdEz7tEcmaoeRYNPsjvHYpkAOvJHP5dwHCEeaEk58VYympUv1BMm1ocQFoUlSTzBByDX7UC02qG9b03/hpcrfcLS+dzluS7iOo9CWlDPcr8042nyBJVW7jaxs4Wli6l6ySjyLNwR3XP8AZX8xf8KjRy0CRUrGbuMBxHeNzoy0fWS6kj+da24as07CX3S7ow8/9GPGJedV8EIyfwqNNg3dKi5XqPUC8IQ9p62Z5qVtM14eQHNLIPmcq9E1kaSnS0vTLBdX1PXC3qBS8oAGTHVnu3eXjyKVftJPmKcQSClKVAFKUoBSlKAUpSgFKUoBSlKAUpSgFKUoBSlRzWkqQ/7Npy3PKamXPclx1B96PGTjvXPQ4ISn9pQPhUpbBqlXeD3t015dn0s2W0MutQlqOE7E/pn/AOIp2J9E5Hzq5Sc4wa5Rre4apt13fiKmu7jBePex0tjkhstk4BCepSQSc8zyqw+1jrNhn2LhtYilqHCQ27cEt8kjA+RY+zG8j0TnrXP6GnljKGXljzQ0pQ+8A16Hs+Jcdtd/wZ03s6Hs3aYZkRRH1ZosSeeCuE8haD6lDuMfAE1sxxr4OEd6dFyw512/ktn+e7Fcz+zyf91lf9O5/wCNebiS2T3qS3tGTvSU4HrnGKv+HxvocmdF3btLwosZUfSeiSwQcJVMdQ0j47GtxPwOKpzXfEDVmtn92obqp+OlWW4bKe7joPgdg+cenNRPpio0lh9SQpMeQpJ6FLCyD9oFfDiVNrCHErbUrJCVoKScdcAgZq84onpENs3GktU6g0nczcdO3WRb31HLgQctvejiDyV0HPr5EVdNg7TMsRRG1XpJm4DACnYDqU7/AFLbnIfYo1z+htxzPdtOOY67G1Kx9wNffs8j/dZP/Tuf+NTeOL+JBNnTCeNnB18B1/RctLvUj8lsq5/EKxWHcO0lYbcw4xpPQzyFAe4qQtqO2fiG9yvwrnBQLRV3qVN4GTvSU4Hmc4r7DLy0haGH1JPMFLKyD8CBWf4aCeTJzq/i9r3U09mTIvSoDcZ5L8eLBBaaQtKgpJVg7nOY5gnBGeVdN6d1O3rHRNo4h2dhX5RgJUmdFRzWpIwJDHqRjenzKU+Briggoc7tYKF4zsUkpVjzwcHFWx2ZNd/mlrgWm4Phuz3taGVlRwlmT81pf8XJB9dlRmwpz+VdBM7FhSWJsNmZFdS8w+2lxtxJyFJIyCPsr2qLaeJsOoH9NryIUnfLtZPRIzl1j+FR3JH1VYHJNSmvNa0aClKVAFKUoBSlKAUpSgFKUoBSlKAUrRXXVNtiTFW+Kl653JPWJCR3i0/4z81seqiKwpP5zTWFv3G5RNNQgMqDJS68B+06v3E/Yk/Gp4gkc6bDgMGRNlMRmU9VuuBCR9pqI6Qnx7jrK/SGS7LDyGjFuCGldwGQCO5SojBUle5RxkELHPlgQLUHE/hDpeUtbbzuqbs2T8ogmYsK8u9WdiPgCBUNndpi+yrxBatmnoFutypbCXjIdLzxaLiQsYThKTtJ55VjyNbzgtrwiNoqHidZrvYeIN8tl9eMi4iWuQ5IJ/tKXSVIdHiAR7uPo7CkcgKtTs8cVNMaP0ynTl3hXF6ZMupLa2IwW2O9WlKQVZ5czz8qzO2namm71pq/tYBksPQ3MD5+3DiCfgN/3mqHsn94bP8AvWF/UN12pLNjWynTO8+ImqLNofTLmoLvEedioebZKYzIWvctQSnl5ZIqhNBv6c4odpqTf0wXF2xm2JfZjS2Qkl5vagKUnpgbiR64PgKsPtefqWk/vKD/AFCKqLsd/rTl/ul3/MbrlxSlid+vX8Et+dF6cSuKmk+H96jWe7264OvPx+/QYsVK0hO7bzORg5r11AzpvibwbeuqYB9jn25cqIp1kJeaISShQ+qoEVTHaztdxvPFyx224wnZ05+1kMsNbd7hDhJA3EDoCeZqKGw8eoWmmbMm3aqhWODG7pEVp2M2020kHIO1e4jHmTVpwy4mk9MN+SX9iApkXTUjjiEK3wYSyCMgElw1afEDjJo7RWp39PXW23N2Wy026pUeIlaNq84556+6arDsRFKr3qgowUGHEKSOmNzmKyeP/CTXGquJs7UNitsJ+E7EjevKrfJ3ApIwCEZO7OFJCsjlnFX9xdi60vTl3XoJp1N1TJiW5EppxDRZaQe/eVvUD1JQjGD/ADrM0xO1UuzL09xps2nvYpKO6RLMxCkSPNLrakgA9PeSTnyFdMZaU7b2vl6ldeTmnhIhpzWbuqL0t122aZiPXqcVrK96kA90gg5OVOEkY8W6t/QXHuyaliN2LijaokJxYTma3lUXfgHKs+8yQc4VkjkDkE4qKcfLBp/h1ZVaW01JeX+cktu4SA4vcWorAHdtJWOZSXTu94nI3DnVS6cs9w1BfoVktTaXJ013umErXsSVYJOVeAABJPpW/Gcs8mRtpnczMm56cYRJQ+9f9OqRuS6k97Kip8Dkfp28ePzx+34SiBMiz4TU2FIakxnkhbbragpKwfEEVXHDuxtcK9IxNMpnS79eJai4zDbVhAVgBXdpPJllPio8viSAZjo2yyLRFluTHGPap0lUp5qMkpYZUQBtbB8OWSo81KJOBnFedSRc3tKUqhIqN8QEIMC2PKSkqau8JSVHqnLyUkg+HIkfA1JKjnEgY0m8/nBjSI8jPlseQr+QNTPYOfO1NYLvqHjFZrXY7c/OmP2rk20nkAHfnKV0SkZ6k/DJ5VvdB8DdPaPbjah4gXvv5yFAsxIzymmELwRtG3DjyueMdD9Wrlv12cRdxabBFjyr462C644Pk4jOThbpHPGc7UDmo56AFQybJpuLBlG5THXLndljC5sgAqSD9FtPRtP7Kftyedb+/pQp6K6WzVWty6mIiJpbTUOyW9Iw27NR3fLzSwjn/wAxSay/zWcnYOob1NuachRjIxHjEg5wUI5qGfBSlCpLSseRYVGWUiPxBuEdzHd3K3NupHmWlKQv8FoqTVHNctuxWYeoozanHbS6XnUIGVOR1Da8kDxIT7wHiUCokHB+p7S7p/VF2sTyQldtnvR9o8EBW5v721Nn7alGjddx9PuaPWq3zHVaeRdErU0tALplklBRk8tmeecemasTtc6N2XKHxCtKA9Bnttx562zlKV/7F3ywoHaT57K53vBKbPPKSQRFdII6j3DXr42ssr9zJ+GWW5xC9pQ25cYlwlzHIdgYkSHFJKnnLdJU86sknJ7zOE+IPXFbfUnFWz6lu06VerNqBxmZYptlktxZDO8MvOhSHGwtW1C0oBSskcyB1AqT6iutz/O2Va9Pv3V65QeHLsuHFRHQtDcpTKA0qOACpThwrIOfDHU1NLc1ORrSebfGd713UdrTcu6YBJaNvBX3uByTuxnOOdc9XK03JZIoxniDCXrvVWo51uurMfUUEw0N299pMmMAEBC0LcwgrARnqefTNZureJts1RadQRHbfqSELpeE3Fv2WRH7s7YzbQak7j7yco3kIz4YNTHUjcscDLohMf8A1U3YZ7jKu6HdpmJnqDO1WPn46AeFYkNvU6uG2hG7bFhL04qJAXdjJb5d4bk2AWzjBcxu3AnOMVdOa1WvXXZBrrlxoRN1FY7jKs9xLFmvL9wYQhxHelhyGtnu8kgBQW4VA527cDOa11l4mQbdpC+aYaZ1W/GvTklT82TJY9tw6wGwve2du9KxuyOW045nlVq21ySdUW+Vq2I+SzK1KnbJjhCzCS6A2EggZR3e0pPQjByc1hMv6YsDkCXYpr7Wn7ZopwR5sVpLzi2WZTY7xI+mVgHn4g1nyleOJJAl8XbZIuFiene1MtUjUBJbaaU2sKaLal7iUK92QFDGDjHSmUoJpDDajLiuNvqQ2G1LQoFSEnaSOh2qHuipvw8XlexZ4TW1BwNFuuUGOs43N+IHhn3cAdKiXF3hno7hxpdt20rJu19fkPJuqJr6pD7XdtlRRubS37vmkHcOWTmtlKlytO2IiQ5LGHotxuDqyj3mlKkOICh5Z+QjyKFqFb7jW9peW9PmS9U6lCeY9pnFSMj0J2jb/NX1k6cYiJSkJSIiEbFgAYjqznBIBz3gHpjn5eFaXTsBi9aoiW+a7Jbt76kONPMtOJdlJz7qe4UNiznHUjbnHIkVIhwXZnPIeTKwY1wjPOAnkpIkKWhQPhukk/E/fWs01p5uyX+XddPylR5M0fv8AJ3HKpbWDlS1K5q2qQVjPmrPPNZs0xSVxlBXL25vl0lLG8+yNKwjPLIHw8DU1dkuJtl5mNIU4hyOzJdjuoUEqbdbBIWCCoZyCOePXnVfar0i1ZVv+y67sUBiI5b7m5FmrjHKX3HJCgvYW0pSBuI91YAOfWukzw3vVlj2c3N6xLt1scbtt/kT1xZakrUywlspbcjFBxtLSsq3J6jAHLFQNpvadkxd82xFJDiN1omJkXiQVJC2UtvtKjhJPPcnaPXHLrW5sOodPJsECzTHrpBNuiMwm5LcVh5CktgJ3ISpaSNwGcEjn1pZGSrS4oM+ZZdWNTX7TbJW0zITT0VK/BlAXt6+YxkVz1c9T3+6WrTus7hIiuynbQ5Bkb2UhT7bJBbW6E4BUNK5kYGOVWp2TZdq4laruSMBFxfuDoHkVNtkf8A2Cr44x2vSHDrhloaPaLxHhSEXSSqT7dKfX3akujIIWjYo8ufupjTFLSbXqVfmSydrS+b5oaIZXPvOrJhTdZxLfHeUSCPJe3A+OB4VC+JnBm7WG9SMWq4Y07ZVlcVceOVPNJPuB4HPeAH6QSDjIBzk1LO1FY7XF4oXnU8e8QGr2xIhraUqcg900pLQ3b9o5dM9fnVFKkxFZCSrHVCxWM2r2S0rK5yf7MtgF2z8R7Na9bWyZatS2e1v2mXJKZUWStv96Sln94WjkADlOwn3scgcHGQ1axwv07cJjWltarUjT7L7EZDqkl1aFtbFqWUr6rC1FYSBV5cFtCan0xbFo0ybXcbhbH5V2XflXSGiS+pK32w0UxTlTaAkqHRZGecVodN8LIPCfTN3bVeJWor5c3lSnnWIm4ISoAIQGkkgJAGcZ5ZyfAVqjFrlb/UHVuXJIo7k0FBcDkbVeoQlIVhQW42gbR12jPT0BNepkBiN3kR6FEkJHvpGcfDOQfXkD51xfaaRoXiDdNLyWFONN90IcpvBLjW9Py0kHkFpO7IB5Hdnp9yz6e7PwfsSK5e7tqWRjLUaEhqKhXiCpXeuH4ghIH7dSziFP1dqjhLpfVVw1LIj2S0ILCGYLKEuSAhAbK1ndjaEkjBHXPXArzb0laJl/ufD+12J5LT7jM22y3V9OelRbQSP3QHXL6nryrb8FLJYdRcJrJpv2u32c60SoIiJbMnc60UISQvGemQMnyrkxy/BNJuUm1xdH8NtJ6kYfcuFxjSY8l2Ov+V7xbXdIKR05IHkOXhW0HGe3YCgKuFlW/qvglZu+ShaXVRHVJPlsf8l4Y9VIT61TfDCa5x04k3a6R7WjT8G1Sghbam3lBslsoKUF4E4B5fJHLdUqkS7/wAL9H6gsyVMtQbi3dIzR5hJkIT8mtQ8sbeZ8M1ePEvhHxT03pW9MaT1E9M0yITkuLcIznekMq3dEuLKsKUhJUoYA8MEkgVJTfuvkd1Iucj6p01bkXKRqDVMfTCHbLHfjhFvkJlOqejbV7UkgqBJGABkkfXPKpDxY4lW/i8xprS9qt8lt2ZeYi2pjKNpJXgpI8R7y+YHSudLtw14naP1Y1c9UXBjVFotq3X7e3FjJabKBzAWhXPAxjBHpVFcJ9JytS8b9LXBl3umnbTfG3e8wSllxIU4keRKcAH1IroxlVeXl8pLt8D1SLqR77yg7LkyFZcPMlpWnlp8+mfDzrnm2anv8A5yRqebbJMGbFXaH2H3FJDSu9ZBWCjmCFIWPWp5wCtGotVahh6stLa1RGr0lqS6U4CWn0NOK5+BWlZJ67s1Q2oo+pWJWkbpcLMzDb0tLYubkBCWkKDpacR3KSQAM4VkAeIp3H14MnJ3uuvHoJ9dtMcSeKGqtZT7tcIVrfmg7U3KMpaHiEpaSMEADaE+fSs3S3F+92R2BOjah01Icm2uBaqjMNRnZbm/CnXV7jhKQnkokq6cga9dS3EasuvES7aSkTnrfb4twtEibJlvH3UuuR1FQJHzgkqI8sJ9axbvG/JVw6T1JqTW1p0zImS7ZMfVblvqWqRIKFJbeWE4wpSckA9TgGnLJa1k5+S6/7/AFFnXm0HrKJcNJQ7Oy9cXnLu27HcS6BKaacC0oQVJA92RSQR0IB5V5cMtCN8Vb5JMiS3C09ai19Nvy7mSEhxBR1dScKIPuJz61wLqDSnGm3cFtF6g1LqOJHuj5Ndebg2gqyM7SeZ6HGOtek4Y8G9caq4mRte6qsT1vt4ffCYziCpTriFYSlPJCASM48/U1vOOmrZ7epNNaMt94VBdclvXCVb4JLS5G4bWwogc0ISOag4M85BqSk0o27JjFvhJNaqvIy+bJBkFbiX3bZAiSXMblNqbaSFpyRuSBkYOfrVVXjSp07e9RWe5PJdeS7Bn27K1bY7a1HcNuT9IpUflHngc8VFddXHX2otFOap0TqRLFtbizIrMRxlAkPqSSVBbm5IGCBtCOuTmuaNMcSNK6o1MnU3Ei1XG7vKjGO7JTIdiboBIO3aSCVc+tVnGCivJD0Ov0vOgRSJMdNwXKcYVuQttLhPIg4VjBB6gg88H7ayba9bL3AcucKVbblGWpXsz7DxaWojKlIJTuBHMHGR5itZxhiaZudvtzWoGLs9qeO/LiXVlTkdaWEo3Nt7ThKiSkjPLHrWBwuv8cJVysnES/6fEiQMxp7k3u29vPBSV56E8wOYrGeJF40qzU8V23yMm76e1JbEqUpBbXJYCgkKBPRQ3d2r4jPpmtVFhXCVqSBa41smOXJ0vIEVppSnCW/fKkpGCkJSCckjGPGud+KnHrSGqb7M0VFRrK0W9tUXvpVoiNrSpJ3Huw4Sc43DAGc9Aa4/1HoXjhqPWz2pNL6ivMOS6ySiGxc3m2cJwMlJwSSPLnmu/BhyTuVOmTTqcbFe48xTLtyYuKmULSXobjBU7uH6Ra0lHI8wM4PpVYRLbq2dLNsmxJMVq4tPvS3JRAbZQgHJUvntzuAH1hioTxM4l6+0FcLZYZ2ordqXUi5DMdhFujPSHmQkAukJJCcpVlJOc4rH0Nxi4kaquzFl0+rT0WBbGnFXE3KS44Vl1vbhAOCnhW5RJO/bk1KJXdPqSw5STw8U8OIGt9V8UZXM6fXaYLbQGSI+B3ZHLdtGVH4gVeHC3h1bwQ9pK5aodsNw07cEFuFbSjIDvzUJOR44V6GqG7M8XS+u9X3/ijYtRuyWL1JihqI6whMRsPuDCVthJ37U7uZ88ZqnNJwbNd7lbNRyL5Kd1BbXJi7iyiO2tLiXFbGCl1QJGcjKefPnWsLySbknM9eCuzeVaZ0tqnT7+k7nFNyjXCazJbS6gK3IcUopxtJOOhABqKVfHE3iOhLOudSwHFoLT0htbVuHklpnBBKj4rUrB/GpBpvhy/wAQr1adRaxdgwo1vfE2LY4SlJckhQKFvuqA3hPLCRyrN4taNh2GYm4Wm5s3m2ZcjNSmwSGl7VpWo4JAAJ+jpzHImotuqXkV8rST1NxRtNuRMky9SzoUuRCkRFOtML5MvOJTvTzQlWSDny5YBrJcfQ8y3LbbkPtpccCHXQsp3LAJAJxgkc/qrysOom9L3y9XK5yEom25yMzFaATiUrI3bSfyQJyrJHMkDoKn8bia+Kkr2ZuYr7iyXnGFQY8mMvDCWUoZUhv3Ejv8pJJBzyCjVfxIIzd7PebxcIV7Y0Xpe2vWM3e3uKQuXcIpSEpfwdhQlZVg9SB0HOrJ4I6sMnU8u+SLV9kvEuSmNL9mWVyHY7iiS4VoG0L3DOcjr6VCde8O7xrjUFkucW+v2m2W+Ol9bCYzUhUh0KKgXN25JSnGMIGeeSRXHOnXdV8PdXWXU0rVFwkR4jEyU6u3sRYUlElTZZc7xtACgkEtnIHMA5wOcrj6pZv0T7oT/AEFxMEe9Z9OtXFxqM7bHFJfuNuLq/aWlOPzqXt6j3FKHkFH1rb8YbPe7XqvVN3W7b0OPyrQ1J+UiKCSAUOIAXhPUkKTuycVadpfuN54sQrrYtSolWKXp+1Psx3GWnWluFwpW5uUAoJIABABBG4etVzGvlvvl3mXWfbXdLXZEf5CLaoKT3S2WkBRGE7SlRSCPDPPNXOjTWmkrTJ2e3Ik2Qb/bI8OBMbXGiNNqW4GkBKkEnA5gZ+J86mLz0G3TBUJUmQz39yUZXezjvEhB8Rjb+5/OpsqjtFzSELaU7cHozHdKbaBRlKB4Fjf8AAAVJK5V3RMl25Kp8+7y2LtAKy0pLsaUFuOBPPaVqWeWTz+z1qvuJuuoOqNP6Sj2i0XC4OXG4O94GmpCipCmlR97ygrCvUVN7rZH+IHFSxW6Xb1KsNtaVKcD6MIkHlsQfXmc/YKkV31RG0p2ddPXiJIh267XKRdVvw1BMHvoQhLW4ZycpAyc4+fzFac1d6FZZF7bT1zfRou0x7IxAhx7hJlvKUO7LygW22gOfMBCEJz5qxWy15bI9zblXXU6osFu3SlMTJkaOhuMCg5IeWAMF1R28sdE4HLPjVVcD+F0LXHEK7amv9oXKhW9TzTLb7a0hx5bxWkFJB5JSMnzHpzqWcWtcwdParRpxzT11v96lx25bSLOz3kcN7ylJUrIABKCD8eMEVIpN76CPH2OoLhPiGfIlRpDsiLHDMqL3mdoC0EgELyeW4c8Dt+FbSPc9NW5qM3fNQwbPLnrU2haluKcaWpKh3ja+7IHiSSBz6gVCOIOmLtpS6y7NeIy2ojaC29HWR3T6OiT1SenqMiqrq9Nytnm0OXmHKdVbIDRUp5laGlBwupIOWgvIVk7s5/Zr0PJFHZ2dHUa3fxzRBF1JetHahj6WVq2+P3GTDcdtslbjXeRVS0kqSTjZvSDgjB6VaUCeq3WiHdrjJ9skSH4s+U4P0zyVFLiwe3Y3IWrIHRIzWj0BpuTqC0aGj2i5OQLu1FfCJLZ2rbU1IA2+ikpKTsJAIOea+dQuO3XRiL/AKxuEfT1zSiUxaWmHJjgd6FIa7xa21oUBke9yJ5jFaONFO0r/iB9eTGdkjuNoat75ht7hLMdT09sFW4+Cj7pIHqR4VTlk0ZbtORr89c1z7g4IbZ9lDiSH2lKUkKb8FZScBJz04yOVegcSPZzxb2Sz3UR2nFfLSI67W/kFQCXB7xPh8qpVLzjaUttNqdW4paghpKSpazySkA8z4ZNQdpbgXJCdm+G3YLi5J0VcY8yNKfdejxZCnXIynTuWlaRhR91X1cjnWVqK5u6Y1Ve9B2xuW3/k1CJLTaEOpJUlbTqgFq2K5EEdOQ5VBrBqjTEiyXG6tXmxRnbpM70o76VKeWHCkJyopISEhPL5x+6FbC4arkvXaFdb3el2jTcOQuBbGooKFIdJ3rfkjcFABRG3pjdnPKq0Ivsb8LLVovQ8XVLV+1EiVDkFb8JKmfaGR3mAUrIBJwAfHPhUc4MambY1WvW9y7xpbcm3zWAyS73n5Q4S82UqBGBuGMHoayeD3BCy8d9V6r1nqRqfJsMgpbajJkLSZKUApRISrYkAYAHX44qVo7PGqrBqZO42bnpq3aH1JaYr7j0VCl2ufFJCtjS3DlLqepCkgKx8M8gTjhywmpvqUXV0fLXq9uy2CVN2xEtxGcqBTkjoOuB4cqzI8lTkhBjOodSUlTy2ioZ6FBSQM4B5p+z0rFLiXfZJmTbgqw2Oy3OUy1LmXRSFpuMfJCo7bSm8ISk7lFOwZI6eNTafbbkBuNAYYkS9vyOXFBRSjPLJ/u+3zrOOjO3wSaHBhzpkCYXt5jFQKe7IOOWcqSQeuOmKmN1ubELS0a5KYkh96JDcZjrKU7i6d6Mg+8lOCcVnW/TNk1FNt8mXqCM3LtCnFNvJXLSy4FjGQspUCc7e55DYfKq4j8ONPJtum7fqK4SYjlwcMWSYqm1NOxFBSi2SCMnYlWM8+Z5Yrli3cM3I6+0VFft8mEzcrdJblsONreS8hLjLaFb1gBRJAz0rz4mxm7LfLhDjXuLfWGCfZriw4FJSPM7XFZ+8dapzXXDrT17t2m0ahZcaVBtKLcHWJCmVuoSckHH1fWtSzwtsd90pqKZJVMuFvudxuCfZfaAhbjSnm2lbSngpW4JAxjodgzWjM2qaSiUt4p1uyHuBqj6sQpfzQojJJwBV82N6SFuXxSFw2FBqNBYbWlKklRWo4VknJAHLy8TVP8AdoLN90nq1VjfTbxcXilMJ6TvJjFCSdxHiOWDyx51e2qYsaPZ2I8q7ItN2hoBjzXiFJJIIUwpJIKFgkAeoIOOhpqKSikuJIDTNt1OzfLxKkRm7PbLkiU++94laXUtBYThJISASRzxk5qkuM+q7JpPUv5R6Q05P1FGaYCrdCUlRCVA7nFnoOo2gjkOeK3/ABb1zr5mrWtFaZemW+MliO5IJjIWpbi8FKQQVO4TuyCD7xHhXPWqeFHELVmvNFX+zWQxrVpd8zHY810bpe5SUqIHunAPPqau4o3eSdRXpQFMjSNvZtc6Q7LfW6pLiW0uqKg2CVJSRjHUEAjbgHI8asHTVoiRNUWzUbNxkzRb5MhthKZLqUpcjuJUFYJBJSCAdxxnIxXHd21bq29cJLPpqTaXXr3OcblXC7i4lsMRUH3EFJUnYc7SoFXU5IHiK7F0Rb7rb9LWiO0OXe3RsrEJWfm4Kc7VA9eeam93q2pcTW/wCepFIa3tnEdNoXDl3e3yX0q/fcVG3tZPLGQPM5Pk9GFZ19BPX5nHkeFMpSgI5pjW9i1TcHoCFy4F4hjMi0T2CxJS3/ANRGcKT6lJGKk1Kj1qpSlAKUpQClKUApSlAKUpQCsW42633Fks3CFHltkY2vNBY/GsqlARlzTEi25e0vcnIChz9jfUp6Iv02k5R8UEY8j0qD8StG23ipZn4UmILLrK1o3NbzuwD094Y71hZHXwI+ioYFvVotXWh+a0zcrXsbvNvJciOKOAsH57Kz9RYGD5HCuoFXm2nsjRUPBzh1C4a2lrU2q4vteqJau6hQWcOrZURyaa8FOEAlS+QAHUAE1abVku95Hf6knuRmVc022A6UISPJx0YW4fPG1PoetfWlIM6dNXqe/QVQ5zqO6iQnFJWqCzyyklJKStRGVEEjkkZOOcmqbt09vsJGvtNltFqRttttixfMtNBJPxPU1sKUrMkUpSgFKUoBSlKAUpSgFKUoBSlKAUpSgFKUoBSlKAUpSgFKUoBSlKAUpSgFKUoBSlKAUpSgFKUoBSlKAUpSgFKUoBSlKA//9k=" alt="TGFC" />
+      </div>
+      <div>
+        <div class="sidebar-brand">Third Generation<br>Food Company</div>
+        <div class="sidebar-sub">Sales CRM</div>
+      </div>
+    </div>
+    <nav class="nav-section">
+      <div class="nav-label">Navigation</div>
+      <div class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard">
+        <span class="nav-icon">&#9632;</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showView('accounts')" id="nav-accounts">
+        <span class="nav-icon">&#9671;</span> All Accounts
+      </div>
+      <div class="nav-item" onclick="showView('contacts')" id="nav-contacts">
+        <span class="nav-icon">&#9711;</span> Contacts
+      </div>
+      <div class="nav-item" onclick="showView('campaigns')" id="nav-campaigns">
+        <span class="nav-icon">&#9993;</span> Campaigns
+      </div>
+    </nav>
+  </div>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="view active" id="view-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Pipeline Overview</div>
+          <div class="page-sub">Foodservice Sales — All Accounts</div>
+        </div>
+        <div class="header-badge"><span class="header-badge-dot"></span> Live CRM</div>
+      </div>
+      <div class="kpi-grid" id="kpi-grid"></div>
+      <div class="two-col">
+        <div class="panel"><div class="panel-title">Pipeline by Status</div><div id="pipeline-rows"></div></div>
+        <div class="panel"><div class="panel-title">Top States</div><div class="state-grid" id="state-grid"></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Accounts Needing Attention — No Contact Info on File</div>
+        <div id="no-contact-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <!-- ACCOUNTS -->
+    <div class="view" id="view-accounts">
+      <div class="page-header"><div><div class="page-title">All Accounts</div><div class="page-sub" id="accts-count"></div></div></div>
+      <div class="toolbar">
+        <input class="tb-search" placeholder="Search name, city, contact..." id="accts-search" oninput="renderAccountsGrid()" />
+        <select class="filter-select" id="filter-status" onchange="renderAccountsGrid()">
+          <option value="">All statuses</option>
+          <option>Prospect</option><option>Contacted</option><option>Follow-up</option>
+          <option>Sample Sent</option><option>Active</option><option>Closed</option>
+        </select>
+        <select class="filter-select" id="filter-state" onchange="renderAccountsGrid()"><option value="">All states</option></select>
+      </div>
+      <div class="accounts-grid" id="accounts-grid"></div>
+    </div>
+
+    <!-- CONTACTS -->
+    <div class="view" id="view-contacts">
+      <div class="page-header"><div><div class="page-title">Contacts</div><div class="page-sub" id="contacts-count"></div></div></div>
+      <div class="toolbar">
+        <input class="tb-search" placeholder="Search name, company, title..." id="contacts-search" oninput="renderContacts()" />
+        <select class="filter-select" id="contacts-filter-status" onchange="renderContacts()">
+          <option value="">All statuses</option>
+          <option>Prospect</option><option>Contacted</option><option>Follow-up</option>
+          <option>Sample Sent</option><option>Active</option><option>Closed</option>
+          <option value="__none">No status</option>
+        </select>
+        <select class="filter-select" id="contacts-filter-has" onchange="renderContacts()">
+          <option value="">All contacts</option>
+          <option value="named">Named contacts only</option>
+          <option value="phone">Has phone</option>
+          <option value="email">Has email</option>
+        </select>
+      </div>
+      <div class="contacts-table-wrap">
+        <table class="ct-table">
+          <thead><tr>
+            <th style="width:28%">Company</th><th style="width:26%">Contact</th>
+            <th style="width:18%">Phone</th><th style="width:14%">Status</th>
+            <th style="width:8%">State</th><th style="width:6%"></th>
+          </tr></thead>
+          <tbody id="contacts-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CAMPAIGNS -->
+    <div class="view" id="view-campaigns">
+      <div class="page-header">
+        <div><div class="page-title">Email Campaigns</div><div class="page-sub">Ready-to-send templates for each prospect type</div></div>
+      </div>
+      <div class="campaign-layout">
+        <div class="campaign-list" id="campaign-list"></div>
+        <div class="email-preview" id="email-preview"></div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="view" id="view-profile">
+      <button class="back-btn" onclick="goBack()">&#8592; Back</button>
+      <div id="profile-content"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const RAW=[{"Facility Name (Distributor)":"Ace Endico","City":"Brewster","State":"NY","Contact Name":"Joe Ordway","Title":"Business Development Manager","Phone Number":"(914) 347-3131","Email":"jordway@aceendico.com","Lead Status":"Prospect","Notes":"Former VP of Sales"},{"Facility Name (Distributor)":"Golden Meat Co.","City":"Bronx","State":"NY","Contact Name":"Kevin Lindgren","Title":"Director","Phone Number":"(212) 203-6564","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Baldor Specialty Foods","City":"Bronx","State":"NY","Contact Name":"Brian Spears","Title":"Protein Commodity Trader","Phone Number":"","Email":"bspears@baldorfood.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Bozzuto's Inc.","City":"Cheshire","State":"CT","Contact Name":"Chris Griffin","Title":"Director of Store Brands","Phone Number":"","Email":"chris.griffin@bozzuto.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Burris Logistics","City":"Milford","State":"DE","Contact Name":"","Title":"","Phone Number":"(800) 805-8135","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"John Soules Foods","City":"Tyler","State":"TX","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Chefs' Warehouse","City":"Ridgefield","State":"NJ","Contact Name":"Christian Garcia","Title":"Business Development Manager","Phone Number":"","Email":"christian@chefswarehouse.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Cosentino\u2019s Food Stores","City":"Overland Park","State":"KS","Contact Name":"Jeff Ahart","Title":"Director of Meat & Seafood","Phone Number":"","Email":"jeff_ahart@cosentinos.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Halsey Fooodservice","City":"Madison","State":"AL","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"DiCarlo Foodservice","City":"Cleveland","State":"OH","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Dot Foods","City":"Mt. Sterling","State":"IL","Contact Name":"Mason Bitz","Title":"Buyer","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Favorite Foods","City":"Somersworth","State":"NH","Contact Name":"Jeff Sargent","Title":"Category Manager","Phone Number":"","Email":"jsargent@favoritefoods.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Feeser's Food Distributors","City":"Harrisburg","State":"PA","Contact Name":"Mark Forbes","Title":"Director of Purchasing","Phone Number":"","Email":"mforbes@feesers.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Ferraro Foods","City":"Piscataway","State":"NJ","Contact Name":"Gary Hamburg","Title":"Buyer","Phone Number":"","Email":"ghamburg@ferrarofoods.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Festival Foods","City":"De Pere","State":"WI","Contact Name":"Holly VanDenLangenberg","Title":"Procurement Manager","Phone Number":"","Email":"hvandenlangenberg@festfoods.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Food Service of America","City":"Scottsdale","State":"AZ","Contact Name":"","Title":"","Phone Number":"(480) 927-4000","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Foodtown","City":"Iselin","State":"NJ","Contact Name":"","Title":"","Phone Number":"(212) 371-2680","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"H.T. Hackney Co.","City":"Knoxville","State":"TN","Contact Name":"","Title":"","Phone Number":"(865) 546-1291","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Hawkeye Foodservice Distribution","City":"Iowa City","State":"IA","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Imperial Dade Foodservice","City":"Jersey City","State":"NJ","Contact Name":"","Title":"","Phone Number":"(201) 437-7440","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Independence Wholesale","City":"Independence","State":"LA","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"International Foodsource","City":"Dover","State":"NJ","Contact Name":"","Title":"","Phone Number":"(973) 361-7044","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Interra International","City":"Atlanta","State":"GA","Contact Name":"","Title":"","Phone Number":"(770) 612-8101","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Jetro / Restaurant Depot","City":"Various","State":"US","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"King Kullen Grocery Co.","City":"Bethpage","State":"NY","Contact Name":"","Title":"","Phone Number":"(516) 733-7100","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Labatt Food Service","City":"San Antonio","State":"TX","Contact Name":"Jason Byrd","Title":"Corporate Buyer","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Labatt Food Service","City":"San Antonio","State":"TX","Contact Name":"Nicole Brandhorst","Title":"Frozen Category Buyer","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Lowe\u2019s Market","City":"","State":"","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Lowes Foods","City":"Winston-Salem","State":"NC","Contact Name":"","Title":"","Phone Number":"(336) 659-0180","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Maines Paper & Food Service","City":"Saratoga Springs","State":"NY","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Martin Bros. Distributing","City":"Cedar Falls","State":"IA","Contact Name":"Sam Snoke","Title":"Buyer II / Purchasing Category Specialist","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Merchants Foodservice","City":"Hattiesburg","State":"MS","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Niemann Foods","City":"","State":"","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Original Crunch Factory","City":"Westfield","State":"NY","Contact Name":"Ram Torres","Title":"Purchasing \u2013 Commodity Proteins","Phone Number":"","Email":"","Lead Status":"","Notes":"Referral from Joey at RWB"},{"Facility Name (Distributor)":"Osborn Brothers, Inc.","City":"Gadsden","State":"AL","Contact Name":"Brett Posey","Title":"General Manager","Phone Number":"","Email":"brett@osbornbros.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Panamerican Foods","City":"Kearny","State":"NJ","Contact Name":"","Title":"","Phone Number":"(201) 991-9222","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Pippin Wholesale","City":"Harrison","State":"AR","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Pritzlaff Wholesale Meats","City":"Milwaukee","State":"WI","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Quirch Foods","City":"Coral Gables","State":"FL","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Ramar Foods Trading","City":"Pittsburg","State":"CA","Contact Name":"","Title":"","Phone Number":"(925) 439-9009","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Redner\u2019s Markets","City":"","State":"","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Reser's Fine Foods","City":"Beaverton","State":"OR","Contact Name":"","Title":"","Phone Number":"(503) 643-6431","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Saladino's Foodservice","City":"Fresno","State":"CA","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Schwan's Company","City":"Marshall","State":"MN","Contact Name":"","Title":"","Phone Number":"(507) 532-3274","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Smart & Final","City":"Commerce","State":"CA","Contact Name":"","Title":"","Phone Number":"(323) 869-7500","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Sofo Foods","City":"Toledo","State":"OH","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Southeastern Food Merchandisers","City":"Birmingham","State":"AL","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Southwest Traders","City":"Oklahoma City","State":"OK","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Stew Leonard\u2019s","City":"","State":"","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Suisan Company","City":"San Francisco","State":"CA","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Sutherland's Foodservice","City":"Forest Park","State":"GA","Contact Name":"David Fine","Title":"Procurement","Phone Number":"","Email":"davidf@suthfoodservice.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Tankersley Foodservice","City":"Conroe","State":"TX","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Tapia Brothers Co.","City":"Maywood","State":"CA","Contact Name":"Ana Lilia Geraldo","Title":"Buyer","Phone Number":"","Email":"ageraldo@tapiabrothers.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Team Sledd","City":"Dawsonville","State":"GA","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Thurston Foods","City":"Wallingford","State":"CT","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Upper Lakes Foods","City":"Cloquet","State":"MN","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"US Foods CHEF'STORE","City":"Various","State":"US","Contact Name":"","Title":"","Phone Number":"","Email":"","Lead Status":"","Notes":""},{"Facility Name (Distributor)":"Van Eerden Foodservice","City":"Grand Rapids","State":"MI","Contact Name":"Adam Behen","Title":"Director of Sales","Phone Number":"","Email":"adamb@vaneerden.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Victory Wholesale Grocers","City":"Granite Bay","State":"CA","Contact Name":"Stan Gladwell","Title":"Sales & Procurement","Phone Number":"","Email":"stang@vwg.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"WinCo Foods","City":"Boise","State":"ID","Contact Name":"Edward E Marshall III","Title":"Procurement Manager","Phone Number":"","Email":"edward.marshall@wincofoods.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Wood Fruitticher Grocery Co.","City":"Birmingham","State":"AL","Contact Name":"Mike Johnson","Title":"Sr. General Manager, Distribution Exec","Phone Number":"","Email":"mjohnson@woodfruitticher.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Woodman\u2019s Markets","City":"Janesville","State":"WI","Contact Name":"Ashlyn Clarke","Title":"Supply Chain Management","Phone Number":"","Email":"ashlyn.clarke@woodmans-food.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Saval Foodservice","City":"Elkridge","State":"MD","Contact Name":"Lou Ciotola","Title":"Buyer","Phone Number":"","Email":"louciotola@savalfoods.com","Lead Status":"Prospect","Notes":""},{"Facility Name (Distributor)":"Roland Foods","City":"New York","State":"NY","Contact Name":"Marissa Schefflan","Title":"Director, Procurement","Phone Number":"","Email":"marissa.schefflan@rolandfoods.com","Lead Status":"Prospect","Notes":""}];
+
+const CAMPAIGNS=[{id:0,tag:'Foodservice Distributors',tagColor:{bg:'#DBEAFE',color:'#1E40AF'},title:'Cold Outreach — Foodservice Distributors',desc:'For regional distributors buying proteins and frozen items.',to:'[Contact Name], [Title]',from:'[Your Name] — Third Generation Food Company',subject:'Premium proteins your customers are asking for — quick intro from TGFC',body:`Hi [First Name],\n\nHope your week is off to a good start — I'll keep this short.\n\nMy name is [Your Name], and I'm with Third Generation Food Company (TGFC). We're a family-owned protein and frozen food supplier that works directly with foodservice distributors across the country to help them offer their customers consistent quality at competitive prices.\n\nWhat we hear from distributors most is that they're juggling too many SKUs that underperform — and not enough reliable sources for high-quality proteins and frozen items their end customers actually love. That's exactly what we've built our business around.\n\nA few things that set us apart:\n• USDA-inspected proteins with strong shelf life and pack flexibility\n• Frozen items built for foodservice — not retail rejects\n• Flexible minimums and direct communication (no layers of middlemen)\n\nI'd love to learn a little more about what [Company Name] is looking for right now, and share a few items we think would be a great fit for your book.\n\nWould you be open to a 15-minute call sometime this week or next? I'm happy to work around your schedule.\n\nThanks so much — really looking forward to connecting.\n\nWarm regards,\n[Your Name]\nThird Generation Food Company\n[Phone] | [Email]`},{id:1,tag:'Wholesale Grocers',tagColor:{bg:'#D1FAE5',color:'#065F46'},title:'Cold Outreach — Wholesale Grocers',desc:'For buyers at wholesale chains sourcing proteins and frozen.',to:'[Buyer Name], [Title]',from:'[Your Name] — Third Generation Food Company',subject:'A protein supplier worth a quick look — intro from TGFC',body:`Hi [First Name],\n\nI came across [Company Name] while researching wholesale grocers in the [Region] area, and I wanted to reach out directly.\n\nI'm [Your Name] with Third Generation Food Company — we're a family-owned supplier specializing in proteins and frozen food items built specifically for the wholesale and grocery channel. We work with buyers who are looking for dependable sourcing partners — not just another vendor on a bid list.\n\nWhat we've found matters most to wholesale buyers:\n• Consistent product quality across every order, not just the first one\n• Packaging and case sizes designed for your operation\n• Transparent pricing with no hidden freight surprises\n• A team that picks up the phone\n\nWhether you're looking to fill a gap in your protein lineup or find a more reliable frozen partner, I'd love to have a quick conversation to see if there's a fit.\n\nI promise I won't take much of your time — even a 10-minute call would go a long way.\n\nWould [Day] or [Day] work for you?\n\nThanks for taking a moment to read this — I genuinely appreciate it.\n\nBest,\n[Your Name]\nThird Generation Food Company\n[Phone] | [Email]`},{id:2,tag:'Food Manufacturers',tagColor:{bg:'#F3E8FF',color:'#6B21A8'},title:'Cold Outreach — Food Manufacturers',desc:'For processors sourcing raw proteins and frozen ingredients.',to:'[Procurement Contact], [Title]',from:'[Your Name] — Third Generation Food Company',subject:'Reliable protein sourcing for your production needs — TGFC intro',body:`Hi [First Name],\n\nI know your inbox is busy, so I'll get right to the point.\n\nI'm [Your Name] from Third Generation Food Company. We supply USDA-inspected proteins and frozen ingredients to food manufacturers who need a sourcing partner they can count on — consistent specs, reliable lead times, and honest communication when things get complicated.\n\nWe understand that for a manufacturer, your supplier's consistency is your consistency. A quality issue or a missed delivery doesn't just affect a purchase order — it affects your whole production run. That's why we've built our business around being the supplier that doesn't create problems for our partners.\n\nHere's what we typically help manufacturers with:\n• Raw protein inputs meeting tight spec sheets\n• Frozen ingredient supply with stable pricing programs\n• Flexibility on order volumes as your production needs change\n• Documentation and traceability to support your QA requirements\n\nI'd love to understand more about what [Company Name] sources and whether we'd be a good fit for any part of your supply chain.\n\nWould you have 15 minutes this week for a quick call?\n\nThanks for your time — I look forward to hearing from you.\n\nSincerely,\n[Your Name]\nThird Generation Food Company\n[Phone] | [Email]`},{id:3,tag:'Follow-Up',tagColor:{bg:'#FEF3C7',color:'#92400E'},title:'Follow-Up — After No Response',desc:"Warm, non-pushy second touch after no reply.",to:'[Contact Name]',from:'[Your Name] — Third Generation Food Company',subject:'Circling back — TGFC proteins & frozen',body:`Hi [First Name],\n\nI wanted to follow up on the note I sent over a little while back — I know things get busy and emails slip through the cracks (I'm guilty of it too).\n\nI won't rehash everything, but the short version is: we're Third Generation Food Company, and we work with foodservice distributors, grocers, and manufacturers to supply quality proteins and frozen items at prices that actually make sense.\n\nIf there's any interest in a quick conversation, I'm easy to reach. And if the timing just isn't right, no worries at all — I'd just appreciate knowing either way so I'm not bothering you again.\n\nEither way, I hope things are going well at [Company Name]. Feel free to reach out any time.\n\nThanks again,\n[Your Name]\nThird Generation Food Company\n[Phone] | [Email]`},{id:4,tag:'Sample Sent Follow-Up',tagColor:{bg:'#CFFAFE',color:'#155E75'},title:'Post-Sample Check-In',desc:'For prospects who received a sample and need a nudge.',to:'[Contact Name]',from:'[Your Name] — Third Generation Food Company',subject:'Quick check-in on the samples — how did they land?',body:`Hi [First Name],\n\nJust wanted to check in and see how the samples we sent over landed on your end.\n\nWe put a lot of care into what we put out — so hearing honest feedback from buyers like yourself is genuinely helpful for us, whether it's positive or constructive.\n\nIf everything looked good and you'd like to talk about pricing, minimums, or getting a first order together, I'm ready to move whenever you are. If something wasn't quite right, I'd love to know — we may have other options that are a better fit.\n\nEither way, thanks again for taking the time to try them. That means a lot to a family-owned business like ours.\n\nLooking forward to hearing your thoughts!\n\nWarm regards,\n[Your Name]\nThird Generation Food Company\n[Phone] | [Email]`},{id:5,tag:'Re-Engagement',tagColor:{bg:'#FEE2E2',color:'#991B1B'},title:'Re-Engagement — Gone Cold',desc:'Reconnect with prospects you lost momentum with.',to:'[Contact Name]',from:'[Your Name] — Third Generation Food Company',subject:'Reconnecting — a lot has changed at TGFC',body:`Hi [First Name],\n\nIt's been a while since we last connected, and I wanted to reach back out — genuinely, not just to fill a quota.\n\nSince we last spoke, we've expanded our protein lineup, improved our lead times significantly, and have been working with some great new distribution partners across the country. I thought of [Company Name] because the timing may actually be better now than it was before.\n\nI'm not looking to pick up exactly where we left off — I'd rather just have a fresh conversation, see where things stand for you now, and go from there. No pressure, no sales pitch.\n\nIf you're open to a quick 15-minute catch-up, I'd genuinely enjoy it. And if things have changed on your end and it's not the right time, I completely understand.\n\nHope all is going well — looking forward to hearing from you.\n\nBest,\n[Your Name]\nThird Generation Food Company\n[Phone] | [Email]`}];
+
+let data=RAW.map((r,i)=>({...r,_id:i,'Lead Status':r['Lead Status']||'',Priority:r.Priority||'',Quoting:r.Quoting||'',Notes:r.Notes||'','Products Discussed':r['Products Discussed']||''}));
+let prevView='dashboard', activeCampaign=0;
+
+const SS={'Prospect':{bg:'#FEF3C7',color:'#92400E'},'Contacted':{bg:'#DBEAFE',color:'#1E40AF'},'Follow-up':{bg:'#D1FAE5',color:'#065F46'},'Sample Sent':{bg:'#CFFAFE',color:'#155E75'},'Active':{bg:'#BBF7D0',color:'#14532D'},'Closed':{bg:'#FEE2E2',color:'#991B1B'},'':{bg:'#F3F4F6',color:'#6B7280'}};
+const SB={'Prospect':'#D97706','Contacted':'#3B82F6','Follow-up':'#10B981','Sample Sent':'#06B6D4','Active':'#16A34A','Closed':'#EF4444','':"#9CA3AF"};
+
+function initials(n){return n?n.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase():'?';}
+function statusBadge(s){const st=SS[s]||SS[''];return `<span class="status-badge" style="background:${st.bg};color:${st.color}">${s||'No status'}</span>`;}
+function priPill(p){const m={'High':{bg:'#FEE2E2',color:'#991B1B'},'Medium':{bg:'#FEF3C7',color:'#92400E'},'Low':{bg:'#D1FAE5',color:'#065F46'}};const st=m[p];return st?`<span class="pill" style="background:${st.bg};color:${st.color}">${p}</span>`:'';}
+
+function showView(v,id){
+  if(v!=='profile') prevView=v;
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  const ni=document.getElementById('nav-'+v);if(ni)ni.classList.add('active');
+  if(v==='accounts')renderAccountsGrid();
+  else if(v==='contacts')renderContacts();
+  else if(v==='campaigns')renderCampaigns();
+  else if(v==='profile')renderProfile(id);
+}
+function goBack(){
+  document.getElementById('view-profile').classList.remove('active');
+  document.getElementById('view-'+prevView).classList.add('active');
+  const ni=document.getElementById('nav-'+prevView);if(ni)ni.classList.add('active');
+}
+function renderDashboard(){
+  const total=data.length,wc=data.filter(r=>r['Contact Name']).length,pros=data.filter(r=>r['Lead Status']==='Prospect').length,noInfo=data.filter(r=>!r['Contact Name']&&!r['Phone Number']&&!r['Email']).length;
+  document.getElementById('kpi-grid').innerHTML=[{label:'Total Accounts',val:total,sub:'In pipeline'},{label:'Named Contacts',val:wc,sub:Math.round(wc/total*100)+'% of accounts'},{label:'Prospects',val:pros,sub:'Lead status set'},{label:'Need Attention',val:noInfo,sub:'No contact info'}].map(k=>`<div class="kpi-card"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+  const statuses=['Prospect','Contacted','Follow-up','Sample Sent','Active','Closed',''];
+  const maxC=Math.max(...statuses.map(s=>data.filter(r=>r['Lead Status']===s).length));
+  document.getElementById('pipeline-rows').innerHTML=statuses.map(s=>{const cnt=data.filter(r=>r['Lead Status']===s).length;if(!cnt&&s!=='Prospect'&&s!=='')return '';return `<div class="pipeline-row"><div class="pipeline-label">${s||'Unset'}</div><div class="pipeline-bar-wrap"><div class="pipeline-bar" style="width:${Math.round(cnt/maxC*100)}%;background:${SB[s]}"></div></div><div class="pipeline-count">${cnt}</div></div>`;}).join('');
+  const sc={};data.forEach(r=>{if(r.State&&r.State!=='US')sc[r.State]=(sc[r.State]||0)+1;});
+  document.getElementById('state-grid').innerHTML=Object.entries(sc).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([s,c])=>`<div class="state-row"><span class="state-name">${s}</span><span class="state-cnt">${c}</span></div>`).join('');
+  document.getElementById('no-contact-list').innerHTML=data.filter(r=>!r['Contact Name']&&!r['Phone Number']&&!r['Email']).map(r=>`<span class="no-contact-tag" onclick="showView('profile',${r._id})">${r['Facility Name (Distributor)']}${r.State?' <span style="color:#6B7280">'+r.State+'</span>':''}</span>`).join('');
+}
+function renderAccountsGrid(){
+  const q=(document.getElementById('accts-search').value||'').toLowerCase(),fs=document.getElementById('filter-status').value,fst=document.getElementById('filter-state').value;
+  const items=data.filter(r=>(!q||r['Facility Name (Distributor)'].toLowerCase().includes(q)||(r.City||'').toLowerCase().includes(q)||(r['Contact Name']||'').toLowerCase().includes(q))&&(!fs||r['Lead Status']===fs)&&(!fst||r.State===fst));
+  document.getElementById('accts-count').textContent=`${items.length} of ${data.length} accounts`;
+  document.getElementById('accounts-grid').innerHTML=items.map(r=>{const name=r['Facility Name (Distributor)'],loc=[r.City,r.State].filter(Boolean).join(', ');return `<div class="acct-card" onclick="showView('profile',${r._id})"><div class="acct-card-header"><div class="acct-card-avatar">${initials(name)}</div><div><div class="acct-card-name">${name}</div><div class="acct-card-loc">${loc||'Location unknown'}</div></div></div><hr class="acct-card-divider"><div class="acct-card-contact">${r['Contact Name']?`<strong>${r['Contact Name']}</strong><br><span>${r.Title||''}</span>`:'<em style="opacity:0.45">No contact on file</em>'}</div><div class="acct-card-footer">${statusBadge(r['Lead Status'])}${r.Priority?priPill(r.Priority):''}</div></div>`;}).join('')||'<p style="color:#6B7280;font-size:13px;padding:20px 0">No accounts match.</p>';
+}
+function renderContacts(){
+  const q=(document.getElementById('contacts-search').value||'').toLowerCase(),fs=document.getElementById('contacts-filter-status').value,fh=document.getElementById('contacts-filter-has').value;
+  let items=[...data].sort((a,b)=>{const an=a['Contact Name']?0:1,bn=b['Contact Name']?0:1;if(an!==bn)return an-bn;return(a['Contact Name']||'').localeCompare(b['Contact Name']||'');}).filter(r=>{
+    const nm=(r['Contact Name']||'').toLowerCase(),co=r['Facility Name (Distributor)'].toLowerCase(),ti=(r.Title||'').toLowerCase();
+    return(!q||nm.includes(q)||co.includes(q)||ti.includes(q))&&(!fs?true:fs==='__none'?!r['Lead Status']:r['Lead Status']===fs)&&(!fh?true:fh==='named'?!!r['Contact Name']:fh==='phone'?!!r['Phone Number']:fh==='email'?!!r['Email']:true);
+  });
+  document.getElementById('contacts-count').textContent=`${items.length} accounts · ${items.filter(r=>r['Contact Name']).length} named contacts`;
+  document.getElementById('contacts-tbody').innerHTML=items.map(r=>`<tr onclick="showView('profile',${r._id})"><td><div class="ct-company">${r['Facility Name (Distributor)']}</div>${[r.City,r.State].filter(Boolean).length?`<div class="ct-sub">${[r.City,r.State].filter(Boolean).join(', ')}</div>`:''}</td><td>${r['Contact Name']?`<div class="ct-contact-cell"><div class="ct-avatar">${initials(r['Contact Name'])}</div><div><div class="ct-name">${r['Contact Name']}</div>${r.Title?`<div class="ct-title">${r.Title}</div>`:''}</div></div>`:'<span style="font-size:12px;opacity:0.4;font-style:italic">No contact on file</span>'}</td><td><span class="ct-phone">${r['Phone Number']||'—'}</span></td><td>${statusBadge(r['Lead Status'])}</td><td style="font-size:12px;color:#6B7280">${r.State||'—'}</td><td class="ct-arrow">&#8250;</td></tr>`).join('');
+}
+function renderCampaigns(){
+  document.getElementById('campaign-list').innerHTML=CAMPAIGNS.map(c=>`<div class="campaign-card${c.id===activeCampaign?' active':''}" onclick="selectCampaign(${c.id})"><div class="campaign-tag" style="background:${c.tagColor.bg};color:${c.tagColor.color}">${c.tag}</div><div class="campaign-title">${c.title}</div><div class="campaign-desc">${c.desc}</div></div>`).join('');
+  renderEmailPreview(activeCampaign);
+}
+function selectCampaign(id){
+  activeCampaign=id;
+  document.querySelectorAll('.campaign-card').forEach((el,i)=>el.classList.toggle('active',i===id));
+  renderEmailPreview(id);
+}
+function renderEmailPreview(id){
+  const c=CAMPAIGNS[id];
+  const highlighted=c.body.replace(/\[([^\]]+)\]/g,'<span class="placeholder">[$1]</span>');
+  document.getElementById('email-preview').innerHTML=`<div class="email-toolbar"><div class="email-toolbar-left">${c.title}</div><button class="copy-btn" id="copy-btn-${id}" onclick="copyEmail(${id})">Copy email</button></div><div class="email-meta"><div class="email-meta-row"><span class="email-meta-label">To</span><span class="email-meta-val">${c.to}</span></div><div class="email-meta-row"><span class="email-meta-label">From</span><span class="email-meta-val">${c.from}</span></div><div class="email-meta-row"><span class="email-meta-label">Subject</span><span class="email-meta-val subject">${c.subject}</span></div></div><div class="email-body">${highlighted}</div><div class="email-footer">Gold highlights = fields to personalize. Click "Copy email" to copy plain text.</div>`;
+}
+function copyEmail(id){
+  const c=CAMPAIGNS[id];
+  const text=`To: ${c.to}\nFrom: ${c.from}\nSubject: ${c.subject}\n\n${c.body}`;
+  navigator.clipboard.writeText(text).catch(()=>{});
+  const btn=document.getElementById('copy-btn-'+id);
+  btn.textContent='Copied!';btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent='Copy email';btn.classList.remove('copied');},2000);
+}
+function renderProfile(id){
+  const r=data.find(d=>d._id===id);if(!r)return;
+  const name=r['Facility Name (Distributor)'],loc=[r.City,r.State].filter(Boolean).join(', ');
+  document.getElementById('profile-content').innerHTML=`<div class="profile-header"><div class="profile-avatar">${initials(name)}</div><div style="flex:1"><div class="profile-name">${name}</div><div class="profile-loc">${loc||'Location not on file'}</div><div class="profile-badges">${statusBadge(r['Lead Status'])}${r.Priority?priPill(r.Priority):''}${r.Quoting?`<span class="pill" style="background:#DBEAFE;color:#1E40AF">Quoting: ${r.Quoting}</span>`:''}</div></div><button class="edit-btn" onclick="toggleEdit(${id})">Edit</button></div><div class="info-grid"><div class="info-panel"><div class="info-panel-title">Contact</div><div class="info-row"><span class="info-key">Name</span><span class="info-val">${r['Contact Name']||'—'}</span></div><div class="info-row"><span class="info-key">Title</span><span class="info-val">${r.Title||'—'}</span></div><div class="info-row"><span class="info-key">Phone</span><span class="info-val">${r['Phone Number']||'—'}</span></div><div class="info-row"><span class="info-key">Email</span><span class="info-val">${r.Email?`<a href="mailto:${r.Email}">${r.Email}</a>`:'—'}</span></div></div><div class="info-panel"><div class="info-panel-title">Sales Details</div><div class="info-row"><span class="info-key">Status</span><span class="info-val">${statusBadge(r['Lead Status'])}</span></div><div class="info-row"><span class="info-key">Priority</span><span class="info-val">${r.Priority||'—'}</span></div><div class="info-row"><span class="info-key">Quoting</span><span class="info-val">${r.Quoting||'—'}</span></div><div class="info-row"><span class="info-key">Products</span><span class="info-val">${r['Products Discussed']||'—'}</span></div></div></div><div class="notes-panel"><div class="notes-label">Notes</div>${r.Notes?`<div class="notes-text">${r.Notes}</div>`:`<div class="notes-empty">No notes recorded yet.</div>`}</div><div id="edit-form-${id}" style="display:none"><div class="info-panel" style="margin-bottom:14px"><div class="info-panel-title">Edit Record</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">${ef('Contact Name',r['Contact Name'],id)}${ef('Title',r.Title,id)}${ef('Phone Number',r['Phone Number'],id)}${ef('Email',r.Email,id)}${ef('Products Discussed',r['Products Discussed'],id)}</div>${es('Lead Status',r['Lead Status'],['','Prospect','Contacted','Follow-up','Sample Sent','Active','Closed'],id)}${es('Priority',r.Priority,['','High','Medium','Low'],id)}${es('Quoting',r.Quoting,['','Yes','No','In Progress'],id)}<div style="margin-top:10px"><label style="font-size:11px;color:#6B7280;display:block;margin-bottom:4px">Notes</label><textarea class="edit-field" id="ef-${id}-Notes" style="width:100%">${r.Notes||''}</textarea></div><div style="display:flex;gap:8px;margin-top:14px"><button class="save-btn" onclick="saveEdit(${id})">Save Changes</button><button class="edit-btn" onclick="toggleEdit(${id})">Cancel</button></div></div></div>`;
+}
+function ef(l,v,id){return `<div><label style="font-size:11px;color:#6B7280;display:block;margin-bottom:4px">${l}</label><input class="edit-field" id="ef-${id}-${l.replace(/ /g,'_')}" value="${(v||'').replace(/"/g,'&quot;')}" /></div>`;}
+function es(l,v,opts,id){return `<div style="margin-top:8px"><label style="font-size:11px;color:#6B7280;display:block;margin-bottom:4px">${l}</label><select class="edit-field" id="ef-${id}-${l.replace(/ /g,'_')}">${opts.map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select></div>`;}
+function toggleEdit(id){const el=document.getElementById('edit-form-'+id);el.style.display=el.style.display==='none'?'block':'none';}
+function saveEdit(id){
+  const r=data.find(d=>d._id===id);
+  ['Contact Name','Title','Phone Number','Email','Products Discussed'].forEach(f=>{const el=document.getElementById(`ef-${id}-${f.replace(/ /g,'_')}`);if(el)r[f]=el.value;});
+  ['Lead Status','Priority','Quoting'].forEach(f=>{const el=document.getElementById(`ef-${id}-${f.replace(/ /g,'_')}`);if(el)r[f]=el.value;});
+  const ne=document.getElementById(`ef-${id}-Notes`);if(ne)r.Notes=ne.value;
+  renderProfile(id);renderDashboard();
+}
+function populateStateFilter(){
+  const states=[...new Set(data.map(r=>r.State).filter(Boolean))].sort();
+  document.getElementById('filter-state').innerHTML+= states.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+populateStateFilter();renderDashboard();
+</script>
+</body>
+</html>
