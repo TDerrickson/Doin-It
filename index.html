@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TGFC CRM — Third Generation Food Company</title>
+<script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -234,6 +236,47 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
 .view-field-val{font-size:13px;color:var(--text-primary);font-weight:500}
 .view-field-val.missing{color:var(--text-muted);font-style:italic;font-weight:400}
 
+/* OFFER ENGINE */
+.offer-layout{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+.offer-list-card{background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.offer-list-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.offer-list-title{font-size:13px;font-weight:700;color:var(--text-primary)}
+.offer-item{padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.offer-item:last-child{border-bottom:none}
+.offer-item:hover{background:var(--surface-warm)}
+.offer-item.selected{background:rgba(59,65,118,.06);border-left:3px solid var(--navy)}
+.offer-item-name{font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:2px}
+.offer-item-meta{font-size:11.5px;color:var(--text-muted)}
+.offer-status-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:600;margin-left:6px}
+.offer-status-badge.draft{background:rgba(130,138,168,.12);color:var(--text-muted)}
+.offer-status-badge.ready{background:rgba(59,65,118,.1);color:var(--navy)}
+.offer-status-badge.sent{background:rgba(45,122,79,.1);color:var(--green)}
+.offer-status-badge.closed{background:rgba(201,60,45,.08);color:#c03c2d}
+.offer-builder{background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px}
+.offer-section{margin-bottom:22px}
+.offer-section-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+.offer-line{background:var(--surface-warm);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;position:relative}
+.offer-line-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.offer-line-num{width:22px;height:22px;border-radius:50%;background:var(--navy);color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.offer-line-product{font-size:13px;font-weight:600;color:var(--text-primary);flex:1}
+.offer-line-remove{width:24px;height:24px;border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:16px;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:all .15s;flex-shrink:0}
+.offer-line-remove:hover{color:#c03c2d;background:rgba(201,60,45,.08)}
+.offer-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.offer-field{display:flex;flex-direction:column;gap:3px}
+.offer-field.wide{grid-column:span 2}
+.offer-field.full{grid-column:1/-1}
+.offer-field label{font-size:10.5px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+.offer-input{padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12.5px;color:var(--text-primary);background:var(--surface-card);outline:none;transition:border-color .15s;width:100%;box-sizing:border-box}
+.offer-input:focus{border-color:var(--navy);box-shadow:0 0 0 2px rgba(59,65,118,.08)}
+.offer-input.sku-select{cursor:pointer}
+.offer-tier-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+.offer-preview{background:#f9f9f9;border:1px solid var(--border);border-radius:8px;padding:16px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.8;color:var(--text-secondary);white-space:pre-wrap;max-height:320px;overflow-y:auto}
+.offer-preview-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.offer-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.offer-recipient-row{display:flex;gap:8px;margin-bottom:14px;align-items:flex-end}
+.offer-recipient-select{flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-primary);background:var(--surface-card);outline:none}
+.offer-empty{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px}
+
 /* CALENDAR */
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .cal-nav{display:flex;align-items:center;gap:12px}
@@ -262,14 +305,37 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
 .cal-legend-item{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--text-secondary)}
 .cal-legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
 
+/* PROSPECT LEADS */
+.prospect-refresh-banner{display:flex;align-items:center;gap:10px;padding:10px 16px;background:rgba(45,122,79,.07);border:1px solid rgba(45,122,79,.2);border-radius:10px;margin-bottom:20px;font-size:13px;color:#1A5C3A}
+.prospect-refresh-banner svg{flex-shrink:0;color:var(--green)}
+.prospect-refresh-date{font-weight:600;margin-left:4px}
+.prospect-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.prospect-count{font-size:12.5px;color:var(--text-muted);margin-left:auto}
+.prospect-table table{width:100%;border-collapse:collapse}
+.prospect-table th{text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:2px solid var(--border);background:var(--surface-warm);white-space:nowrap}
+.prospect-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+.prospect-table tr:hover td{background:rgba(59,65,118,.025)}
+.prospect-table tr.already-added td{opacity:.45}
+.prospect-tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.prospect-tag.broadline{background:rgba(59,65,118,.1);color:var(--navy)}
+.prospect-tag.wholesale-grocery{background:rgba(45,90,122,.12);color:#1E4F6E}
+.prospect-tag.specialty{background:rgba(201,122,45,.1);color:#7A4A1E}
+.prospect-tag.protein{background:rgba(139,26,26,.08);color:#7A1A1A}
+.prospect-tag.convenience{background:rgba(100,80,160,.1);color:#3d2d7a}
+.prospect-tag.regional-chain{background:rgba(45,122,79,.1);color:#1A5C3A}
+.add-prospect-btn{padding:4px 12px;font-size:12px;border-radius:6px;border:1px solid var(--navy);background:transparent;color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;transition:all .15s;white-space:nowrap}
+.add-prospect-btn:hover{background:var(--navy);color:white}
+.add-prospect-btn.added{border-color:var(--green);color:var(--green);cursor:default}
+.add-prospect-btn.added:hover{background:transparent;color:var(--green)}
+
 /* CALENDAR EVENT MODAL */
-.cal-event-modal .modal-box{width:460px;max-width:95vw}
 .cem-field{margin-bottom:14px}
 .cem-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px}
-.cem-input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-primary);outline:none;box-sizing:border-box;transition:border-color .15s}
+.cem-input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-primary);outline:none;box-sizing:border-box;transition:border-color .15s;background:var(--surface-card)}
 .cem-input:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(59,65,118,.1)}
 .cem-type-row{display:flex;gap:8px;flex-wrap:wrap}
-.cem-type-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.cem-type-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface-card);font-size:12.5px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+.cem-type-btn:hover{border-color:var(--navy);color:var(--navy);background:rgba(59,65,118,.06)}
 .cem-type-btn.selected{border-color:var(--navy);background:rgba(59,65,118,.1);color:var(--navy);font-weight:600}
 
 /* FOLLOW-UP MODAL */
@@ -293,7 +359,8 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
 .fu-badge.campaign-overdue{background:rgba(201,60,45,.1);color:#c03c2d;border:1px solid rgba(201,60,45,.2)}
 
 /* EMAIL COMPOSER MODAL */
-.composer-modal .modal-box{width:700px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column}
+.composer-subject-input{background:var(--surface-card)}
+.composer-body-textarea{background:var(--surface-card)}
 .composer-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
 .composer-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .composer-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;background:rgba(59,65,118,.1);color:var(--navy);border:1px solid rgba(59,65,118,.2)}
@@ -442,11 +509,65 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
 
 @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}.campaigns-layout{grid-template-columns:1fr}.profile-layout{grid-template-columns:1fr}}
 @media(max-width:720px){.sidebar{width:56px}.logo-text,.nav-item span,.nav-badge,.user-name,.user-role{display:none}.main{margin-left:56px;padding:14px}.header{left:56px}.kpi-grid{grid-template-columns:1fr 1fr}}
+
+/* LOGIN SCREEN */
+#login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#2C3260 0%,#3B4176 60%,#4A5290 100%);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
+#login-screen.hidden{opacity:0;pointer-events:none}
+.login-box{background:white;border-radius:20px;padding:44px 48px;width:420px;max-width:92vw;box-shadow:0 24px 60px rgba(0,0,0,.25);text-align:center}
+.login-logo{width:72px;height:72px;margin:0 auto 20px;background:rgba(59,65,118,.08);border-radius:16px;display:flex;align-items:center;justify-content:center}
+.login-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.login-sub{font-size:13px;color:var(--text-muted);margin-bottom:28px}
+.login-user-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.login-user-btn{padding:12px 10px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;transition:all .15s;background:var(--surface-warm);text-align:center}
+.login-user-btn:hover{border-color:var(--navy);background:rgba(59,65,118,.05);transform:translateY(-1px)}
+.login-user-btn.selected{border-color:var(--navy);background:rgba(59,65,118,.08)}
+.login-avatar{width:40px;height:40px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;margin:0 auto 7px}
+.login-user-name{font-size:13px;font-weight:600;color:var(--text-primary)}
+.login-user-role{font-size:11px;color:var(--text-muted)}
+.login-continue-btn{width:100%;padding:13px;background:var(--navy);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;margin-bottom:16px}
+.login-continue-btn:hover{background:#2C3260}
+.login-continue-btn:disabled{opacity:.4;cursor:not-allowed}
+.login-divider{display:flex;align-items:center;gap:10px;margin-bottom:16px;color:var(--text-muted);font-size:12px}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.login-ms-btn{width:100%;padding:11px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:white;color:var(--text-primary);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s}
+.login-ms-btn:hover{border-color:#0078D4;color:#0078D4;background:rgba(0,120,212,.04)}
+
+/* OUTLOOK CONNECT BADGE in sidebar */
+.outlook-badge{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:8px;font-size:11.5px;cursor:pointer;transition:all .15s;margin-top:6px;border:1px solid var(--border);background:var(--surface-warm)}
+.outlook-badge:hover{border-color:#0078D4;color:#0078D4}
+.outlook-badge.connected{border-color:rgba(45,122,79,.3);background:rgba(45,122,79,.06);color:var(--green)}
+.outlook-badge-dot{width:7px;height:7px;border-radius:50%;background:var(--text-muted);flex-shrink:0}
+.outlook-badge.connected .outlook-badge-dot{background:var(--green)}
+
 </style>
 </head>
 <body>
 
 <!-- SIDEBAR -->
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#3B4176" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </div>
+    <div class="login-title">TGFC CRM</div>
+    <div class="login-sub">Third Generation Food Company · Sales Platform</div>
+    <div class="login-user-grid" id="login-user-grid"></div>
+    <button class="login-continue-btn" id="login-continue-btn" onclick="loginContinue()" disabled>Select a team member to continue</button>
+    <div class="login-divider">connect email to send directly</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button class="login-ms-btn" onclick="msalSignIn()">
+        <svg width="15" height="15" viewBox="0 0 23 23"><rect x="1" y="1" width="10" height="10" fill="#f25022"/><rect x="12" y="1" width="10" height="10" fill="#7fba00"/><rect x="1" y="12" width="10" height="10" fill="#00a4ef"/><rect x="12" y="12" width="10" height="10" fill="#ffb900"/></svg>
+        Outlook
+      </button>
+      <button class="login-ms-btn" onclick="googleSignIn()">
+        <svg width="15" height="15" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Gmail
+      </button>
+    </div>
+  </div>
+</div>
+
 <aside class="sidebar">
   <div class="sidebar-logo">
     <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
@@ -468,19 +589,41 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
       <span>Leads</span>
       <div class="nav-badge" id="nav-badge-leads">—</div>
     </div>
+    <div class="nav-item" onclick="gotoPage('customers',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span>Customers</span>
+      <div class="nav-badge" id="nav-badge-customers" style="background:rgba(45,122,79,.15);color:var(--green)">—</div>
+    </div>
     <div class="nav-item" onclick="gotoPage('campaigns',this)">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       <span>Email Campaigns</span>
+    </div>
+    <div class="nav-item" onclick="gotoPage('prospects',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M11 8v3l2 2"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Prospect Leads</span>
+      <div class="nav-badge" id="nav-badge-prospects" style="background:rgba(45,122,79,.2);color:var(--green)">NEW</div>
     </div>
     <div class="nav-item" onclick="gotoPage('calendar',this)">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       <span>Calendar</span>
     </div>
+    <div class="nav-section-label" style="margin-top:16px">Tools</div>
+    <div class="nav-item" onclick="gotoPage('offers',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <span>Offer Engine</span>
+    </div>
   </nav>
   <div class="sidebar-footer">
-    <div class="user-info">
-      <div class="user-avatar">TD</div>
-      <div><div class="user-name">Taylor Derrickson</div><div class="user-role">Sales Rep</div></div>
+    <div class="user-info" style="cursor:pointer" onclick="showUserMenu()" title="Switch user">
+      <div class="user-avatar" id="sidebar-avatar">TD</div>
+      <div>
+        <div class="user-name" id="sidebar-name">Taylor Derrickson</div>
+        <div class="user-role" id="sidebar-role">Sales Rep</div>
+      </div>
+    </div>
+    <div class="outlook-badge" id="outlook-badge" onclick="outlookBadgeClick()">
+      <div class="outlook-badge-dot" id="outlook-dot"></div>
+      <span id="outlook-badge-label">Connect Email</span>
     </div>
   </div>
 </aside>
@@ -539,7 +682,6 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
   </div>
   <div class="leads-tabs">
     <div class="leads-tab active" id="tab-active" onclick="setLeadsTab('active')">Active <span class="tab-count" id="tc-active">—</span></div>
-    <div class="leads-tab" id="tab-customer" onclick="setLeadsTab('customer')">Customers <span class="tab-count" id="tc-customer">—</span></div>
     <div class="leads-tab" id="tab-archived" onclick="setLeadsTab('archived')">Archived <span class="tab-count" id="tc-archived">—</span></div>
   </div>
   <div id="tab-context" style="font-size:12.5px;color:var(--text-muted);margin-bottom:14px;padding:9px 14px;background:var(--surface-warm);border:1px solid var(--border);border-radius:8px"></div>
@@ -573,6 +715,56 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
   </div>
 </div>
 
+<!-- ══ CUSTOMERS ══ -->
+<div class="page fade-in" id="page-customers">
+  <div class="section-header">
+    <div><div class="section-title">Customers</div><div class="section-sub" id="customers-sub">Converted accounts and direct customer relationships</div></div>
+    <button class="btn btn-primary" onclick="showModal('addCustomerModal')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Customer
+    </button>
+  </div>
+  <div class="toolbar">
+    <div class="search-box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search customers, contacts, cities…" id="customersSearch" oninput="renderCustomersPage()"></div>
+    <select class="filter-select" id="customersStateFilter" onchange="renderCustomersPage()">
+      <option value="">All States</option>
+      <option>AL</option><option>AR</option><option>AZ</option><option>CA</option><option>CT</option>
+      <option>DE</option><option>FL</option><option>GA</option><option>IA</option><option>ID</option>
+      <option>IL</option><option>KS</option><option>LA</option><option>MD</option><option>MI</option>
+      <option>MN</option><option>MS</option><option>NC</option><option>NH</option><option>NJ</option>
+      <option>NY</option><option>OH</option><option>OK</option><option>OR</option><option>PA</option>
+      <option>TN</option><option>TX</option><option>US</option><option>WI</option>
+    </select>
+    <select class="filter-select" id="customersTzFilter" onchange="renderCustomersPage()">
+      <option value="">All Timezones</option>
+      <option value="America/New_York">Eastern</option>
+      <option value="America/Chicago">Central</option>
+      <option value="America/Denver">Mountain</option>
+      <option value="America/Los_Angeles">Pacific</option>
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table><thead><tr><th>Company</th><th>Contact</th><th>Title</th><th>Location</th><th>Timezone</th><th>Phone</th><th>Actions</th></tr></thead>
+    <tbody id="customers-tbody"></tbody></table>
+    <div class="pagination"><span id="customers-showing"></span></div>
+  </div>
+</div>
+
+<!-- ADD CUSTOMER MODAL -->
+<div class="modal-overlay" id="addCustomerModal" onclick="if(event.target===this)hideModal('addCustomerModal')">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Add Customer</div><div class="modal-close" onclick="hideModal('addCustomerModal')">✕</div></div>
+    <div class="modal-body">
+      <div class="field-group"><div class="fld" style="grid-column:1/-1"><label>Company Name *</label><input id="nc-company" type="text" placeholder="e.g. Sysco Southeast"></div></div>
+      <div class="field-group"><div class="fld"><label>Contact Name</label><input id="nc-contact" type="text" placeholder="First Last"></div><div class="fld"><label>Title</label><input id="nc-title" type="text" placeholder="e.g. Buyer"></div></div>
+      <div class="field-group"><div class="fld"><label>Phone</label><input id="nc-phone" type="tel" placeholder="(555) 000-0000"></div><div class="fld"><label>Email</label><input id="nc-email" type="email" placeholder="contact@company.com"></div></div>
+      <div class="field-group three"><div class="fld"><label>Address</label><input id="nc-address" type="text" placeholder="123 Main St"></div><div class="fld"><label>City</label><input id="nc-city" type="text" placeholder="City"></div><div class="fld"><label>State</label><input id="nc-state" type="text" placeholder="FL" maxlength="3"></div></div>
+      <div class="field-group"><div class="fld"><label>Zip</label><input id="nc-zip" type="text" placeholder="00000"></div></div>
+      <div class="field-group full"><div class="fld"><label>Notes</label><textarea id="nc-notes" placeholder="Product interest, account details, context…"></textarea></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="hideModal('addCustomerModal')">Cancel</button><button class="btn btn-primary" onclick="addCustomer()" style="background:var(--green)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Save Customer</button></div>
+  </div>
+</div>
+
 <!-- ══ LEAD PROFILE ══ -->
 <div class="page fade-in" id="page-profile">
   <div class="profile-back" onclick="backToLeads()">
@@ -585,6 +777,71 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
 </div>
 
 <!-- ══ EMAIL CAMPAIGNS ══ -->
+<div class="page fade-in" id="page-prospects">
+  <div class="section-header">
+    <div><div class="section-title">Prospect Leads</div><div class="section-sub">Frozen food buyers and foodservice distributors similar to your current leads — refreshed every Monday</div></div>
+  </div>
+  <div class="prospect-refresh-banner">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    <span>Last refreshed <span class="prospect-refresh-date" id="prospect-refresh-date"></span> · Next refresh Monday</span>
+    <button class="btn btn-ghost btn-sm" style="margin-left:auto;font-size:12px" onclick="refreshProspects()">↻ Refresh now</button>
+  </div>
+  <div class="prospect-filter-bar">
+    <div class="search-box" style="max-width:260px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Search prospects…" id="prospectSearch" oninput="renderProspects()"></div>
+    <select class="filter-select" id="prospectTypeFilter" onchange="renderProspects()">
+      <option value="">All Types</option>
+      <option value="broadline">Broadline Distributor</option>
+      <option value="wholesale-grocery">Wholesale Grocery</option>
+      <option value="specialty">Specialty / Protein</option>
+      <option value="protein">Meat &amp; Protein</option>
+      <option value="convenience">Convenience / C-Store</option>
+      <option value="regional-chain">Regional Chain</option>
+    </select>
+    <select class="filter-select" id="prospectRegionFilter" onchange="renderProspects()">
+      <option value="">All Regions</option>
+      <option value="Northeast">Northeast</option>
+      <option value="Southeast">Southeast</option>
+      <option value="Midwest">Midwest</option>
+      <option value="South">South</option>
+      <option value="West">West</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;margin-left:4px">
+      <input type="checkbox" id="prospectHideAdded" onchange="renderProspects()" style="accent-color:var(--navy)"> Hide added
+    </label>
+    <span class="prospect-count" id="prospect-count"></span>
+  </div>
+  <div class="table-wrap prospect-table" id="prospect-table-wrap"></div>
+</div>
+
+<!-- ══ OFFER ENGINE ══ -->
+<div class="page fade-in" id="page-offers">
+  <div class="section-header">
+    <div><div class="section-title">Offer Engine</div><div class="section-sub">Build and send product offers to leads and customers</div></div>
+    <button class="btn btn-primary" onclick="newOffer()" style="background:var(--navy)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Offer
+    </button>
+  </div>
+  <div class="offer-layout">
+    <!-- LEFT: Offer list -->
+    <div class="offer-list-card">
+      <div class="offer-list-header">
+        <div class="offer-list-title">Saved Offers</div>
+        <span id="offer-count" style="font-size:11.5px;color:var(--text-muted)">0 offers</span>
+      </div>
+      <div id="offer-list-body">
+        <div class="offer-empty">No offers yet.<br>Click "+ New Offer" to start building.</div>
+      </div>
+    </div>
+    <!-- RIGHT: Offer builder -->
+    <div id="offer-builder-wrap">
+      <div class="offer-empty" style="background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:60px 20px">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--border-dark)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 12px;display:block"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Select an offer or create a new one
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="page fade-in" id="page-calendar">
   <div class="section-header">
     <div><div class="section-title">Calendar</div><div class="section-sub">Scheduled calls, follow-ups, and campaign email due dates</div></div>
@@ -609,13 +866,13 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
 </div>
 
 <!-- CALENDAR EVENT MODAL -->
-<div class="modal-overlay cal-event-modal" id="calEventModal">
-  <div class="modal-box" style="width:460px;max-width:95vw">
+<div class="modal-overlay" id="calEventModal">
+  <div class="modal" style="width:460px">
     <div class="modal-header">
       <div class="modal-title" id="cem-title">Add Event</div>
       <div class="modal-close" onclick="hideModal('calEventModal')">✕</div>
     </div>
-    <div style="padding:18px 22px">
+    <div class="modal-body">
       <div class="cem-field">
         <label class="cem-label">Type</label>
         <div class="cem-type-row" id="cem-type-row">
@@ -645,12 +902,12 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
           <option value="">— No lead linked —</option>
         </select>
       </div>
-      <div class="cem-field">
-        <label class="cem-label">Notes</label>
-        <textarea class="cem-input" id="cem-notes-input" style="min-height:60px;resize:none" placeholder="Agenda, talking points…"></textarea>
+      <div class="cem-field" style="margin-bottom:0">
+        <label class="cem-label">Notes <span style="font-weight:400;text-transform:none">(optional)</span></label>
+        <textarea class="cem-input" id="cem-notes-input" style="min-height:64px;resize:none" placeholder="Agenda, talking points…"></textarea>
       </div>
     </div>
-    <div style="padding:0 22px 18px;display:flex;justify-content:space-between;align-items:center">
+    <div class="modal-footer" style="justify-content:space-between">
       <button class="btn btn-ghost btn-sm" id="cem-delete-btn" onclick="deleteCalEvent()" style="color:#c03c2d;display:none">Delete</button>
       <div style="display:flex;gap:8px;margin-left:auto">
         <button class="btn btn-secondary" onclick="hideModal('calEventModal')">Cancel</button>
@@ -660,14 +917,14 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
   </div>
 </div>
 
-<!-- EVENT DETAIL POPOVER (read-only quick view) -->
+<!-- EVENT DETAIL MODAL -->
 <div class="modal-overlay" id="calDetailModal">
-  <div class="modal-box" style="width:380px;max-width:95vw">
+  <div class="modal" style="width:380px">
     <div class="modal-header">
       <div class="modal-title" id="cdm-title"></div>
       <div class="modal-close" onclick="hideModal('calDetailModal')">✕</div>
     </div>
-    <div style="padding:16px 22px 20px" id="cdm-body"></div>
+    <div class="modal-body" id="cdm-body"></div>
   </div>
 </div>
 
@@ -722,7 +979,7 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
 
 <!-- EMAIL COMPOSER MODAL -->
 <div class="modal-overlay composer-modal" id="composerModal">
-  <div class="modal-box" style="width:700px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column">
+  <div class="modal" style="width:700px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden">
     <div class="composer-header">
       <div class="composer-meta">
         <span class="composer-badge" id="composer-step-badge">Email 1</span>
@@ -746,6 +1003,10 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
       <div class="composer-actions">
         <button class="btn btn-secondary" onclick="saveTemplateEdits()">💾 Save to Template</button>
         <button class="btn btn-secondary" onclick="hideModal('composerModal')">Cancel</button>
+        <button class="btn btn-secondary" onclick="openInOutlook()" title="Opens a pre-filled draft in Outlook">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Open in Outlook
+        </button>
         <button class="btn btn-primary" onclick="markEmailSent()" style="background:var(--navy)">✓ Mark as Sent</button>
       </div>
     </div>
@@ -754,7 +1015,7 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
 
 <!-- TEMPLATE EDIT MODAL -->
 <div class="modal-overlay" id="templateEditModal">
-  <div class="modal-box" style="width:700px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column">
+  <div class="modal" style="width:700px;max-height:90vh;display:flex;flex-direction:column">
     <div class="modal-header">
       <div class="modal-title">Edit Email Template</div>
       <div class="modal-close" onclick="hideModal('templateEditModal')">✕</div>
@@ -762,7 +1023,7 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
     <div style="padding:16px 22px;flex:1;display:flex;flex-direction:column;overflow:hidden">
       <div style="margin-bottom:12px">
         <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Step</label>
-        <select id="template-step-select" onchange="loadTemplateForEdit(this.value)" style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;width:100%;outline:none">
+        <select id="template-step-select" onchange="loadTemplateForEdit(this.value)" style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;width:100%;outline:none;background:var(--surface-card);color:var(--text-primary);box-sizing:border-box">
           <option value="email-1">Email 1 — Introduction (Day 1)</option>
           <option value="email-2">Email 2 — Value Add (Day 3)</option>
           <option value="email-3">Email 3 — Social Proof (Day 7)</option>
@@ -775,16 +1036,65 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
       </div>
       <div style="margin-bottom:10px">
         <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Subject Line</label>
-        <input type="text" id="template-subject-input" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box">
+        <input type="text" id="template-subject-input" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;box-sizing:border-box;background:var(--surface-card);color:var(--text-primary)">
       </div>
       <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
         <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px">Body</label>
-        <textarea id="template-body-input" style="flex:1;padding:12px;border:1px solid var(--border);border-radius:8px;font-family:'DM Mono',monospace;font-size:12.5px;line-height:1.7;outline:none;resize:none;min-height:280px"></textarea>
+        <textarea id="template-body-input" style="flex:1;padding:12px;border:1px solid var(--border);border-radius:8px;font-family:'DM Mono',monospace;font-size:12.5px;line-height:1.7;outline:none;resize:none;min-height:280px;background:var(--surface-card);color:var(--text-primary);box-sizing:border-box"></textarea>
       </div>
     </div>
-    <div style="padding:12px 22px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
+    <div style="padding:12px 22px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0">
       <button class="btn btn-secondary" onclick="hideModal('templateEditModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveTemplate()" style="background:var(--navy)">Save Template</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOG CALL MODAL -->
+<div class="modal-overlay" id="logCallModal">
+  <div class="modal" style="width:460px">
+    <div class="modal-header">
+      <div class="modal-title">Log a Call</div>
+      <div class="modal-close" onclick="hideModal('logCallModal')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:14px">
+        <label class="fu-section-label">Date</label>
+        <input type="date" class="fu-date-input" id="lc-date-input">
+      </div>
+      <div style="margin-bottom:14px">
+        <label class="fu-section-label">Duration <span style="font-weight:400;text-transform:none;font-size:11px">(optional)</span></label>
+        <select class="fu-date-input" id="lc-duration-select" style="background:var(--surface-card);color:var(--text-primary)">
+          <option value="">— Select —</option>
+          <option value="< 5 min">&lt; 5 min</option>
+          <option value="5–10 min">5–10 min</option>
+          <option value="10–20 min">10–20 min</option>
+          <option value="20–30 min">20–30 min</option>
+          <option value="30–60 min">30–60 min</option>
+          <option value="60+ min">60+ min</option>
+        </select>
+      </div>
+      <div style="margin-bottom:14px">
+        <label class="fu-section-label">Outcome <span style="font-weight:400;text-transform:none;font-size:11px">(optional)</span></label>
+        <select class="fu-date-input" id="lc-outcome-select" style="background:var(--surface-card);color:var(--text-primary)">
+          <option value="">— Select —</option>
+          <option value="Left voicemail">Left voicemail</option>
+          <option value="No answer">No answer</option>
+          <option value="Connected — interested">Connected — interested</option>
+          <option value="Connected — not interested">Connected — not interested</option>
+          <option value="Connected — follow up needed">Connected — follow up needed</option>
+          <option value="Connected — sent info">Connected — sent info</option>
+          <option value="Meeting scheduled">Meeting scheduled</option>
+        </select>
+      </div>
+      <div>
+        <label class="fu-section-label">Notes <span style="font-weight:400;text-transform:none;font-size:11px">(optional)</span></label>
+        <textarea class="fu-note-input" id="lc-notes-input" placeholder="What was discussed, next steps, anything worth remembering…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="hideModal('logCallModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLogCall()" style="background:var(--navy)">Log Call</button>
     </div>
   </div>
 </div>
@@ -900,97 +1210,120 @@ const CAMPAIGNS = [
     description:'8-touch, 35-day sequence built for the foodservice and protein distribution industry. Moves from introduction through relationship-building to a respectful close. Personalize by segment before sending.',
     opens:'—',replies:'—',
     templates:{
-      'email-1':{subject:'Quick intro — Third Generation Food Company',body:`Hi [First Name],
+      'email-1':{subject:'Quick intro — Third Generation Food Company',body:`Hey [First Name],
 
-My name is Taylor Derrickson with Third Generation Food Company (TGFC). We're a USDA-inspected protein manufacturer specializing in [IQF chicken, beef, pork — edit to match] — and I came across [Company Name] while researching [their distribution footprint / product line / recent news item].
+My name is Taylor with Third Generation Food Company. We're now a fourth-generation family business that has been working in the food industry for 60 years.
 
-I wanted to reach out because I think there's a real fit between what we produce and what you're moving. We offer consistent volume, competitive pricing, and the food safety credentials (USDA, SQF) your buyers expect.
+We work with distributors to help support both core 52-week a year programs as well as overrun opportunities from select co-packers when excess production becomes available.
 
-Would you be open to a 15-minute call this week or next to explore whether it makes sense?
+Many of the distributors we work with like having us as both a reliable supplier for core items and a resource for opportunity buys for added margin when they make sense.
 
-Best,
+Below are a few of the many items that Third Generation Food Company can offer that I think would be a good fit for [Company Name]:
+
+• Beef (Ground, Patties, Cooked)
+
+Our goal is to be a reliable partner, whether that is supporting core items 52-weeks a year or helping with an opportunity buy when the right deal comes along.
+
+Best Regards,
 Taylor Derrickson
 Third Generation Food Company`},
-      'email-2':{subject:'A data point you might find useful',body:`Hi [First Name],
+      'email-2':{subject:'A few items I think would be a good fit',body:`Hey [First Name],
 
-Following up on my note from a few days ago — wanted to share something relevant rather than just bumping my last email.
+Following up on my note from a couple days ago — wanted to make sure it didn't get buried.
 
-[IQF protein demand / private label growth] has been trending sharply upward in the past 12 months, particularly in the [foodservice / retail / club store] channel. Buyers are consolidating suppliers and prioritizing those who can guarantee consistent supply and traceability.
+To give you a fuller picture of what we can offer [Company Name], Third Generation Food Company works across a broad range of protein categories:
 
-That's exactly where TGFC sits. We've been able to step in for several distributors who had reliability issues with their previous suppliers.
+• Beef (Ground, Patties, Cooked)
+• Chicken (IQF, Further Processed, Cooked)
+• Pork (Various cuts and formats)
 
-Happy to share more specifics if it's useful. Still interested in a quick call?
+Whether you need a consistent 52-week supplier for core items or a source for overrun product at better-than-normal margins, we can play either role — or both.
 
-Taylor`},
-      'email-3':{subject:'Why distributors trust TGFC',body:`Hi [First Name],
+Would it be worth a quick call to see if there's a fit?
 
-I know you're busy, so I'll keep this brief.
-
-A few things that might be relevant to you:
-• USDA-inspected, SQF-certified facility
-• [X million lbs] annual capacity with consistent availability
-• Cold chain integrity from production to delivery
-• Custom cuts, pack sizes, and private label capability
-
-We recently [started supplying / partnered with] [reference a relevant company type or region] and have been able to [specific outcome — e.g. maintain 99% fill rates during the supply disruptions last quarter].
-
-Would it be worth 15 minutes to see if we can do the same for you?
-
-Taylor`},
-      'email-4':{subject:'Still on your radar?',body:`Hi [First Name],
-
-Just checking in — I've reached out a couple of times and want to make sure I'm not missing you.
-
-If the timing isn't right or you're already covered, no worries at all — just let me know and I'll get out of your inbox.
-
-But if there's any interest in learning more about TGFC's protein programs, I'm happy to make it easy. Even a quick reply pointing me to the right person would be a huge help.
-
-Thanks,
-Taylor`},
-      'email-5':{subject:"What we're seeing in the protein market right now",body:`Hi [First Name],
-
-Sharing something I think is genuinely worth your time — not a pitch, just an observation from the floor.
-
-[Private label protein / IQF demand / cold storage constraints] is creating real pressure on buyers right now. Distributors who have locked in reliable supply relationships are weathering it well. Those who haven't are scrambling.
-
-We've been through a few of these cycles and have built our operation specifically to stay reliable when things get tight — predictable lead times, transparent pricing, and no surprise shortages.
-
-If that's something you'd want to talk through, I'm available. If not, at least wanted to put a useful perspective in front of you.
-
-Taylor`},
-      'email-6':{subject:'Can we get 20 minutes on the calendar?',body:`Hi [First Name],
-
-I'll be direct — I'd love to get 20 minutes with you to walk through what TGFC offers and whether there's a fit.
-
-If it's easier, I'm also happy to send over a product spec sheet and pricing overview so you have something concrete to look at before we talk.
-
-Just reply "send the sheet" and I'll get it over to you today.
-
-Taylor`},
-      'email-7':{subject:'Last note from me (for now)',body:`Hi [First Name],
-
-I've reached out a few times over the past few weeks and haven't heard back — I get it, inboxes are brutal.
-
-I'll take this as the wrong time and won't keep reaching out. But if TGFC ever crosses your mind — new product launch, supplier reliability issues, private label interest — my contact info is below and I'll always make time for a conversation.
-
-Wishing you a strong [Q2 / rest of the year / season].
-
+Best Regards,
 Taylor Derrickson
-Third Generation Food Company
-[Phone] | [Email]`},
-      'email-8':{subject:'Closing the loop — and leaving something useful',body:`Hi [First Name],
+Third Generation Food Company`},
+      'email-3':{subject:'What TGFC can offer [Company Name]',body:`Hey [First Name],
 
-This is my last note. Just wanted to close the loop properly rather than go quiet.
+I'll keep this one brief.
 
-I've attached our product overview / spec sheet so you have it on file. If you ever need a reliable protein supplier — whether it's for a new program, a gap in your current supply chain, or a private label project — I hope you'll think of us.
+A few things that tend to matter to buyers when they're evaluating a new protein supplier:
 
-The door is always open.
+• USDA-inspected, SQF-certified facility — audit-ready at all times
+• 52-week core item availability — no surprise gaps in supply
+• Overrun and opportunity buy access — extra margin when the timing is right
+• Custom pack sizes and private label capability
+• A family business that picks up the phone
 
-Thanks for your time, even if the timing didn't work out.
+We've been doing this for 60 years across four generations. The relationships we build tend to stick because we're straightforward to work with.
 
+Worth 15 minutes to see if we're a fit for [Company Name]?
+
+Best Regards,
 Taylor Derrickson
-Third Generation Food Company
-[Phone] | [Email]`}
+Third Generation Food Company`},
+      'email-4':{subject:'Still worth connecting?',body:`Hey [First Name],
+
+I've reached out a couple of times and don't want to be a nuisance — so I'll keep this simple.
+
+If the timing isn't right or you're fully covered on protein, just say the word and I'll get out of your inbox. No hard feelings at all.
+
+But if there's any chance Third Generation Food Company could be useful to [Company Name] — whether for core programs or the occasional opportunity buy — even a quick reply pointing me to the right person would go a long way.
+
+Either way, thanks for your time.
+
+Best Regards,
+Taylor Derrickson
+Third Generation Food Company`},
+      'email-5':{subject:'One thing buyers tell us consistently',body:`Hey [First Name],
+
+Not a pitch this time — just something worth passing along.
+
+One thing we hear consistently from the buyers we work with: having a secondary protein supplier on hand isn't just about backup. It's about being positioned to move fast when overrun product hits the market at the right price.
+
+That's a big part of what we do at Third Generation Food Company. When co-packers have excess production, we make it available to our distributor partners — often at margins that make it worth moving quickly.
+
+If that's something [Company Name] would ever want visibility into, I'd love to be on your radar.
+
+Best Regards,
+Taylor Derrickson
+Third Generation Food Company`},
+      'email-6':{subject:'Happy to send our availability sheet',body:`Hey [First Name],
+
+I know committing to a call with a new supplier isn't always easy to prioritize, so here's a lower-barrier option:
+
+Let me send over a product overview and current availability sheet before we ever talk. That way you can decide whether Third Generation Food Company is worth your time with something concrete in hand — not just my word for it.
+
+Just reply with "send it" and I'll get it over to you today.
+
+Best Regards,
+Taylor Derrickson
+Third Generation Food Company`},
+      'email-7':{subject:'Last note from me — for now',body:`Hey [First Name],
+
+I've reached out a handful of times over the past few weeks and haven't heard back — totally understand. Inboxes are relentless and timing isn't always right.
+
+I won't keep following up after this, but I want to leave the door open. If Third Generation Food Company ever crosses your mind — core program gaps, an opportunity buy you want to move on, private label interest — feel free to reach out directly.
+
+Wishing you and the team at [Company Name] a strong rest of the year.
+
+Best Regards,
+Taylor Derrickson
+Third Generation Food Company`},
+      'email-8':{subject:'Closing the loop',body:`Hey [First Name],
+
+Last note from me — just wanted to close the loop properly rather than go quiet.
+
+In 60 years and four generations, we've built Third Generation Food Company around one idea: be the kind of supplier people actually want to call. Reliable on core programs, resourceful on opportunity buys, and straightforward to work with when something comes up.
+
+If the timing ever changes at [Company Name], I hope you'll think of us. I'll always make time for a conversation.
+
+Thanks for your time, even if it didn't work out right now.
+
+Best Regards,
+Taylor Derrickson
+Third Generation Food Company`}
     },
     weeks:[
       {label:'Week 1 — Initial Outreach',steps:[
@@ -1095,17 +1428,472 @@ function gotoPage(name, navEl){
   document.getElementById('page-'+name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   if(navEl) navEl.classList.add('active');
-  const titles={dashboard:'Pipeline Overview',leads:'Leads',campaigns:'Email Campaigns',profile:'Lead Profile',calendar:'Calendar'};
-  document.getElementById('header-title').textContent = titles[name]||name;
+  const titles={dashboard:'Pipeline Overview',leads:'Leads',customers:'Customers',campaigns:'Email Campaigns',profile:'Lead Profile',calendar:'Calendar',prospects:'Prospect Leads',offers:'Offer Engine'};
+  const _el_header_title=document.getElementById('header-title');if(_el_header_title){_el_header_title.textContent=titles[name]||name;}
   const p=document.getElementById('page-'+name);
   p.classList.remove('fade-in'); void p.offsetWidth; p.classList.add('fade-in');
   if(name==='leads') renderLeadsTable();
   if(name==='campaigns'){renderCampaignsList();renderCadencePanel(selectedCampId);}
   if(name==='dashboard') renderDashboard();
   if(name==='calendar') renderCalendar();
+  if(name==='customers') renderCustomersPage();
+  if(name==='prospects') renderProspects();
+  if(name==='offers') renderOffers();
 }
 
+
 // ════════════════════════════════════════════════
+// OFFER ENGINE
+// ════════════════════════════════════════════════
+
+// SKU Master — seeded from TGFC Item Master Sheet
+// Add/edit items here or future: load from SharePoint
+let SKU_MASTER = [
+  // id, name, desc, brand, mfr, pack, netWt, tiHi, datingCode, photoUrl (Dropbox dl=1 link), specUrl
+  {id:'90201', name:"BF HR Turkey EP's", desc:'Honey Roasted Turkey Breast Ends & Pieces', brand:'Brookville Farms', mfr:'Tracco', pack:'Bulk', netWt:25, tiHi:'', datingCode:'PD', photoUrl:'', specUrl:''},
+  {id:'90203', name:"BF OR Turkey EP's", desc:'Oven Roasted Turkey Breast Ends & Pieces', brand:'Brookville Farms', mfr:'Tracco', pack:'Bulk', netWt:25, tiHi:'', datingCode:'PD', photoUrl:'', specUrl:''},
+  {id:'2728-0928', name:'MSC 20% Down', desc:'Mechanically Separated Chicken', brand:'Tyson', mfr:'Tyson', pack:'Bulk', netWt:40, tiHi:'5x8', datingCode:'PD', photoUrl:'', specUrl:''},
+];
+
+let OFFERS = [];
+let currentOfferId = null;
+
+function newOffer() {
+  const id = 'offer-' + Date.now();
+  const prep = (typeof activeUser !== 'undefined' && activeUser) ? activeUser.name : 'Taylor Derrickson';
+  OFFERS.unshift({ id, name:'New Offer ' + new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}), status:'draft', recipientId:'', category:'', preparedBy:prep, lines:[emptyLine(1)], createdAt:new Date().toISOString(), sentAt:null });
+  currentOfferId = id;
+  renderOffers();
+  saveOffersState();
+}
+
+function emptyLine(num) {
+  return {num, skuId:'', casesAvail:'', minCases:'', price1:'', qtyBreak2:'', price2:'', qtyBreak3:'', price3:'', lotDate:'', useBy:'', comments:''};
+}
+
+function renderOffers() {
+  renderOfferList();
+  if (currentOfferId) {
+    const offer = OFFERS.find(o=>o.id===currentOfferId);
+    if (offer) renderOfferBuilder(offer);
+  }
+}
+
+function selectOffer(id) { currentOfferId=id; renderOffers(); }
+
+function renderOfferList() {
+  const listEl=document.getElementById('offer-list-body');
+  const countEl=document.getElementById('offer-count');
+  if(countEl) countEl.textContent=OFFERS.length+' offer'+(OFFERS.length!==1?'s':'');
+  if(!listEl) return;
+  if(!OFFERS.length){listEl.innerHTML='<div class="offer-empty">No offers yet.<br>Click \u201c+ New Offer\u201d to start.</div>';return;}
+  const statusLabels={draft:'Draft',ready:'Ready',sent:'Sent',closed:'Closed'};
+  listEl.innerHTML=OFFERS.map(o=>{
+    const recip=o.recipientId?(LEADS.find(l=>l.id===o.recipientId)||{company:'Unknown'}).company:'No recipient';
+    const lc=o.lines.filter(l=>l.skuId).length;
+    return '<div class="offer-item'+(o.id===currentOfferId?' selected':'')+'" onclick="selectOffer(\''+o.id+'\')">'+
+      '<div class="offer-item-name">'+o.name+'<span class="offer-status-badge '+o.status+'">'+statusLabels[o.status]+'</span></div>'+
+      '<div class="offer-item-meta">'+recip+' \u00b7 '+lc+' item'+(lc!==1?'s':'')+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+function renderOfferBuilder(offer) {
+  const wrap=document.getElementById('offer-builder-wrap');
+  if(!wrap) return;
+  const allPeople=LEADS.filter(l=>l.status!=='Archived').sort((a,b)=>a.company.localeCompare(b.company));
+  const recipOpts='<option value="">— Select recipient —</option>'+allPeople.map(l=>'<option value="'+l.id+'"'+(l.id===offer.recipientId?' selected':'')+'>'+l.company+(l.contact?' \u2014 '+l.contact:'')+' ('+l.status+')</option>').join('');
+  const skuOpts='<option value="">— Select SKU —</option>'+SKU_MASTER.map(s=>'<option value="'+s.id+'">'+s.id+' \u2014 '+s.name+'</option>').join('');
+  const linesHtml=offer.lines.map(line=>{
+    const sku=SKU_MASTER.find(s=>s.id===line.skuId);
+    const sel=skuOpts.replace('value="'+line.skuId+'"','value="'+line.skuId+'" selected');
+    return '<div class="offer-line">'+
+      '<div class="offer-line-header">'+
+        '<div class="offer-line-num">'+line.num+'</div>'+
+        '<div class="offer-line-product">'+(sku?sku.name+' <span style="font-weight:400;color:var(--text-muted);font-size:12px">('+sku.brand+')</span>':'Select a product')+'</div>'+
+        (offer.lines.length>1?'<button class="offer-line-remove" onclick="removeLine(\''+offer.id+'\','+line.num+')">&#215;</button>':'')+
+      '</div>'+
+      '<div class="offer-fields">'+
+        '<div class="offer-field wide"><label>Product (SKU)</label><select class="offer-input" onchange="updateLine(\''+offer.id+'\','+line.num+',\'skuId\',this.value)">'+sel+'</select></div>'+
+        '<div class="offer-field"><label>Pack</label><input class="offer-input" value="'+(sku?sku.pack:'')+'" readonly placeholder="Auto"></div>'+
+        '<div class="offer-field"><label>Net Wt (lb)</label><input class="offer-input" value="'+(sku?sku.netWt:'')+'" readonly placeholder="Auto"></div>'+
+        '<div class="offer-field"><label>Ti/Hi</label><input class="offer-input" value="'+(sku&&sku.tiHi?sku.tiHi:'')+'" readonly placeholder="Auto"></div>'+
+        '<div class="offer-field"><label>Dating</label><input class="offer-input" value="'+(sku?sku.datingCode:'')+'" readonly placeholder="Auto"></div>'+
+        '<div class="offer-field"><label>Cases Available</label><input class="offer-input" type="number" value="'+(line.casesAvail||'')+'" placeholder="e.g. 380" oninput="updateLine(\''+offer.id+'\','+line.num+',\'casesAvail\',this.value)"></div>'+
+        '<div class="offer-field"><label>Minimum Cases</label><input class="offer-input" type="number" value="'+(line.minCases||'')+'" placeholder="e.g. 25" oninput="updateLine(\''+offer.id+'\','+line.num+',\'minCases\',this.value)"></div>'+
+        '<div class="offer-field"><label>Lot Date</label><input class="offer-input" type="date" value="'+(line.lotDate||'')+'" oninput="updateLine(\''+offer.id+'\','+line.num+',\'lotDate\',this.value)"></div>'+
+        '<div class="offer-field"><label>Use By</label><input class="offer-input" type="date" value="'+(line.useBy||'')+'" oninput="updateLine(\''+offer.id+'\','+line.num+',\'useBy\',this.value)"></div>'+
+      '</div>'+
+      '<div class="offer-tier-row">'+
+        '<div class="offer-field"><label>$/LB Tier 1</label><input class="offer-input" type="number" step="0.0001" value="'+(line.price1||'')+'" placeholder="$0.0000" oninput="updateLine(\''+offer.id+'\','+line.num+',\'price1\',this.value)"></div>'+
+        '<div class="offer-field"><label>Qty Break 2 (cs)</label><input class="offer-input" type="number" value="'+(line.qtyBreak2||'')+'" placeholder="e.g. 100" oninput="updateLine(\''+offer.id+'\','+line.num+',\'qtyBreak2\',this.value)"></div>'+
+        '<div class="offer-field"><label>$/LB Tier 2</label><input class="offer-input" type="number" step="0.0001" value="'+(line.price2||'')+'" placeholder="$0.0000" oninput="updateLine(\''+offer.id+'\','+line.num+',\'price2\',this.value)"></div>'+
+        '<div class="offer-field"><label>Qty Break 3 (cs)</label><input class="offer-input" type="number" value="'+(line.qtyBreak3||'')+'" placeholder="e.g. 200" oninput="updateLine(\''+offer.id+'\','+line.num+',\'qtyBreak3\',this.value)"></div>'+
+        '<div class="offer-field"><label>$/LB Tier 3</label><input class="offer-input" type="number" step="0.0001" value="'+(line.price3||'')+'" placeholder="$0.0000" oninput="updateLine(\''+offer.id+'\','+line.num+',\'price3\',this.value)"></div>'+
+        '<div class="offer-field"><label>Notes</label><input class="offer-input" value="'+(line.comments||'')+'" placeholder="Optional" oninput="updateLine(\''+offer.id+'\','+line.num+',\'comments\',this.value)"></div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  const statusLabels={draft:'Draft',ready:'Ready',sent:'Sent',closed:'Closed'};
+  const htmlPreview=buildOfferHTML(offer);
+  wrap.innerHTML='<div class="offer-builder">'+
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">'+
+      '<input class="offer-input" style="font-size:15px;font-weight:600;flex:1" value="'+offer.name+'" placeholder="Offer name" oninput="updateOfferName(\''+offer.id+'\',this.value)">'+
+      '<select class="offer-input" style="width:120px" onchange="updateOfferStatus(\''+offer.id+'\',this.value)">'+
+        ['draft','ready','sent','closed'].map(s=>'<option value="'+s+'"'+(s===offer.status?' selected':'')+'>'+statusLabels[s]+'</option>').join('')+
+      '</select>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">'+
+      '<div><div class="offer-section-title" style="margin-bottom:6px">Recipient</div>'+
+        '<select class="offer-recipient-select" style="width:100%" onchange="updateOfferRecipient(\''+offer.id+'\',this.value)">'+recipOpts+'</select></div>'+
+      '<div><div class="offer-section-title" style="margin-bottom:6px">Product Category <span style="font-weight:400;text-transform:none;font-size:11px">(section header color)</span></div>'+
+        '<input class="offer-input" value="'+(offer.category||'')+'" placeholder="e.g. Philly Beef, Ground Beef, Poultry\u2026" oninput="updateOfferCategory(\''+offer.id+'\',this.value)"></div>'+
+    '</div>'+
+    '<div class="offer-section"><div class="offer-section-title">Product Lines</div>'+
+      linesHtml+
+      '<button class="btn btn-secondary btn-sm" onclick="addLine(\''+offer.id+'\')" style="margin-top:6px">+ Add Line</button>'+
+    '</div>'+
+    '<div class="offer-section">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'+
+        '<div class="offer-preview-label" style="margin:0">HTML Offer Preview</div>'+
+        '<button class="btn btn-secondary btn-sm" onclick="previewOfferInWindow(\''+offer.id+'\')">&#9632; Open Full Preview</button>'+
+      '</div>'+
+      '<iframe id="offer-preview-frame" style="width:100%;height:440px;border:1px solid var(--border);border-radius:8px;background:white" srcdoc="'+escHtml(htmlPreview)+'"></iframe>'+
+    '</div>'+
+    '<div class="offer-actions">'+
+      '<button class="btn btn-secondary" onclick="copyOfferHTMLToClipboard(\''+offer.id+'\')">&#128203; Copy HTML</button>'+
+      '<button class="btn btn-secondary" onclick="openOfferInOutlook(\''+offer.id+'\')">&#128231; Open in Outlook</button>'+
+      '<button class="btn btn-primary" onclick="sendOffer(\''+offer.id+'\')" style="background:var(--navy)">&#x2709;&#xFE0F; Send via Email</button>'+
+      '<button class="btn btn-ghost btn-sm" onclick="deleteOffer(\''+offer.id+'\')" style="color:#c03c2d;margin-left:auto">Delete</button>'+
+    '</div>'+
+  '</div>';
+}
+
+function buildOfferHTML(offer) {
+  const recip=offer.recipientId?LEADS.find(l=>l.id===offer.recipientId):null;
+  const prepared=offer.preparedBy||((typeof activeUser!=='undefined'&&activeUser)?activeUser.name:'Taylor Derrickson');
+  const userEmail=(typeof activeUser!=='undefined'&&activeUser&&activeUser.email)?activeUser.email:'Taylor@thetgfc.com';
+  const offerDate=new Date().toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
+  const lines=offer.lines.filter(l=>l.skuId);
+  const category=offer.category||'Product Offer';
+  const tableHeaders=['DESCRIPTION','ITEM #','VENDOR / BRAND','PACK','NET WT','TI/HI','DATING','CASES','$/LB','$/CASE','SPEC','NOTES'];
+  const rowsHtml=lines.map(line=>{
+    const sku=SKU_MASTER.find(s=>s.id===line.skuId);if(!sku) return '';
+    const pricePerLb=line.price1?parseFloat(line.price1):null;
+    const casePrice=pricePerLb&&sku.netWt?(pricePerLb*sku.netWt).toFixed(2):'';
+    const priceLbStr=pricePerLb?'$'+pricePerLb.toFixed(4):'';
+    const brandStr=[sku.brand,sku.mfr].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(' / ');
+    const specLink=sku.specUrl?'<a href="'+sku.specUrl+'" style="color:#3B4176;text-decoration:none;font-weight:600">Attached</a>':'';
+    const dateStr=line.useBy?('UFB '+new Date(line.useBy+'T12:00:00').toLocaleDateString('en-US',{month:'numeric',year:'2-digit'})):(line.lotDate?new Date(line.lotDate+'T12:00:00').toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'2-digit'}):sku.datingCode||'');
+    const photoCell=sku.photoUrl?'<tr><td colspan="12" style="padding:12px 16px;text-align:center;background:#fafafa;border-bottom:1px solid #e0e0e0"><img src="'+sku.photoUrl+'" alt="'+sku.name+'" style="max-height:130px;max-width:320px;object-fit:contain;border-radius:4px"></td></tr>':'';
+    const td=(v,extra)=>'<td style="padding:9px 10px;font-size:12px;color:#222;border-bottom:1px solid #e8e8e8;vertical-align:middle;'+(extra||'')+'">'+(v===''||v===null||v===undefined?'&nbsp;':v)+'</td>';
+    return '<tr style="background:#fff">'+
+      td('<b style="font-size:12.5px">'+sku.name+'</b><br><span style="color:#666;font-size:11px">'+sku.desc+'</span>','max-width:260px;white-space:normal')+
+      td(sku.id)+td(brandStr)+td(sku.pack||'')+td(sku.netWt?sku.netWt+' lbs':'')+td(sku.tiHi||'')+td(dateStr)+
+      td(line.casesAvail||'')+td(priceLbStr?'<b>'+priceLbStr+'</b>':'')+td(casePrice?'$'+casePrice:'')+td(specLink)+td(line.comments||'')+
+    '</tr>'+photoCell;
+  }).join('');
+  const tierNotes=lines.map(line=>{const sku=SKU_MASTER.find(s=>s.id===line.skuId);if(!sku) return '';const n=[];if(line.price2&&line.qtyBreak2)n.push(sku.name+': $'+parseFloat(line.price2).toFixed(4)+'/lb (\u2265'+line.qtyBreak2+' cs)');if(line.price3&&line.qtyBreak3)n.push(sku.name+': $'+parseFloat(line.price3).toFixed(4)+'/lb (\u2265'+line.qtyBreak3+' cs)');return n.join(' | ');}).filter(Boolean).join('<br>');
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;padding:0;font-family:Arial,sans-serif;background:#f0f0f0}table{border-collapse:collapse;width:100%}.wrap{max-width:900px;margin:0 auto;background:#fff}</style></head><body><div class="wrap">'+
+    '<table style="background:#d6e4f7"><tr><td style="padding:18px 24px">'+
+      '<table><tr>'+
+        '<td style="padding-right:16px;vertical-align:middle"><div style="width:52px;height:52px;background:#3B4176;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:12px;text-align:center;line-height:1.2">TGFC</div></td>'+
+        '<td style="vertical-align:middle">'+
+          '<div style="font-size:20px;font-weight:700;color:#1a1a2e;font-family:Georgia,serif">Third Generation Food Company</div>'+
+          '<div style="font-size:12px;color:#444;margin-top:2px">Quality Products, Competitive Pricing</div>'+
+          '<div style="font-size:12px;color:#444;margin-top:4px">Offer Date: <b>'+offerDate+'</b></div>'+
+          '<div style="font-size:12px;color:#444">Prepared by: '+prepared+' | <a href="mailto:'+userEmail+'" style="color:#3B4176">'+userEmail+'</a></div>'+
+        '</td>'+
+      '</tr></table>'+
+    '</td></tr></table>'+
+    '<table style="width:100%"><tr><td style="background:#3B4176;padding:8px 16px;color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+category+'</td></tr></table>'+
+    '<table style="width:100%"><thead><tr style="background:#555">'+tableHeaders.map(h=>'<th style="padding:7px 10px;font-size:10px;font-weight:700;color:#fff;text-align:left;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em">'+h+'</th>').join('')+'</tr></thead><tbody>'+rowsHtml+'</tbody></table>'+
+    (tierNotes?'<div style="padding:10px 16px;font-size:11.5px;color:#555;background:#f9f9f9;border-top:1px solid #e8e8e8">Volume pricing: '+tierNotes+'</div>':'')+
+    '<table style="width:100%;background:#f5f5f5;border-top:2px solid #3B4176"><tr><td style="padding:16px 24px;text-align:center">'+
+      '<div style="width:36px;height:36px;background:#3B4176;border-radius:6px;color:white;font-weight:900;font-size:10px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px">TGFC</div>'+
+      '<div style="font-size:10.5px;color:#777;line-height:1.6">Prices subject to change. Availability may vary. Contact us for current pricing and lead times.<br><em>Confidential \u2013 For intended recipient only.</em></div>'+
+    '</td></tr></table>'+
+  '</div></body></html>';
+}
+
+function updatePreviewFrame(offer){const f=document.getElementById('offer-preview-frame');if(f)f.srcdoc=escHtml(buildOfferHTML(offer));}
+function previewOfferInWindow(offerId){const o=OFFERS.find(x=>x.id===offerId);if(!o)return;const w=window.open('','_blank');w.document.write(buildOfferHTML(o));w.document.close();}
+
+function updateLine(offerId,lineNum,field,value){
+  const offer=OFFERS.find(o=>o.id===offerId);if(!offer)return;
+  const line=offer.lines.find(l=>l.num===lineNum);if(!line)return;
+  line[field]=value;
+  updatePreviewFrame(offer);
+  if(field==='skuId')renderOfferBuilder(offer);
+  saveOffersState();
+}
+function addLine(offerId){const offer=OFFERS.find(o=>o.id===offerId);if(!offer)return;const n=Math.max(...offer.lines.map(l=>l.num))+1;offer.lines.push(emptyLine(n));renderOfferBuilder(offer);saveOffersState();}
+function removeLine(offerId,lineNum){const offer=OFFERS.find(o=>o.id===offerId);if(!offer||offer.lines.length<=1)return;offer.lines=offer.lines.filter(l=>l.num!==lineNum);renderOfferBuilder(offer);saveOffersState();}
+function updateOfferName(offerId,name){const o=OFFERS.find(x=>x.id===offerId);if(o){o.name=name;renderOfferList();saveOffersState();}}
+function updateOfferStatus(offerId,status){const o=OFFERS.find(x=>x.id===offerId);if(o){o.status=status;renderOfferList();saveOffersState();}}
+function updateOfferCategory(offerId,cat){const o=OFFERS.find(x=>x.id===offerId);if(!o)return;o.category=cat;updatePreviewFrame(o);saveOffersState();}
+function updateOfferRecipient(offerId,recipId){const o=OFFERS.find(x=>x.id===offerId);if(!o)return;o.recipientId=recipId;updatePreviewFrame(o);renderOfferList();saveOffersState();}
+function deleteOffer(offerId){OFFERS=OFFERS.filter(o=>o.id!==offerId);if(currentOfferId===offerId)currentOfferId=OFFERS.length?OFFERS[0].id:null;renderOffers();saveOffersState();showToast('Offer deleted');}
+function copyOfferHTMLToClipboard(offerId){
+  const offer=OFFERS.find(o=>o.id===offerId);if(!offer)return;
+  const html=buildOfferHTML(offer);
+  try{const blob=new Blob([html],{type:'text/html'});navigator.clipboard.write([new ClipboardItem({'text/html':blob})]).then(()=>showToast('HTML offer copied \u2713'));}
+  catch(e){const ta=document.createElement('textarea');ta.value=html;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('Offer copied \u2713');}
+}
+function openOfferInOutlook(offerId){
+  const offer=OFFERS.find(o=>o.id===offerId);if(!offer)return;
+  const recip=offer.recipientId?LEADS.find(l=>l.id===offer.recipientId):null;
+  const to=recip&&recip.email?recip.email:'';
+  window.location.href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent('TGFC Product Offer Sheet \u2014 '+offer.name);
+}
+async function sendOffer(offerId){
+  const offer=OFFERS.find(o=>o.id===offerId);if(!offer)return;
+  const recip=offer.recipientId?LEADS.find(l=>l.id===offer.recipientId):null;
+  if(!recip||!recip.email){showToast('Add recipient email first','amber');return;}
+  const html=buildOfferHTML(offer);
+  const subject='TGFC Product Offer Sheet \u2014 '+offer.name;
+  if(msalAccount){
+    const token=await getAccessToken();if(!token){showToast('Connect Outlook first','amber');return;}
+    showToast('Sending offer\u2026');
+    const resp=await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({message:{subject,body:{contentType:'HTML',content:html},toRecipients:[{emailAddress:{address:recip.email}}]},saveToSentItems:true})});
+    if(resp.ok){offer.status='sent';offer.sentAt=new Date().toISOString();if(recip.activity)recip.activity.push({type:'email',text:'Offer sent: '+offer.name,time:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})});renderOffers();saveOffersState();showToast('Offer sent to '+recip.company+' \u2713');}
+    else showToast('Send failed','amber');
+  }else if(googleAccessToken){
+    const boundary='tgfc_'+Date.now();
+    const mime=['MIME-Version: 1.0','To: '+recip.email,'Subject: '+subject,'Content-Type: multipart/alternative; boundary="'+boundary+'"','','--'+boundary,'Content-Type: text/html; charset=utf-8','',html,'--'+boundary+'--'].join('\r\n');
+    const encoded=btoa(unescape(encodeURIComponent(mime))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    showToast('Sending offer\u2026');
+    const resp=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{method:'POST',headers:{'Authorization':'Bearer '+googleAccessToken,'Content-Type':'application/json'},body:JSON.stringify({raw:encoded})});
+    if(resp.ok){offer.status='sent';offer.sentAt=new Date().toISOString();renderOffers();saveOffersState();showToast('Offer sent to '+recip.company+' \u2713');}
+    else showToast('Send failed','amber');
+  }else{previewOfferInWindow(offerId);showToast('Copy the offer from the preview window','amber');}
+}
+function saveOffersState(){try{sessionStorage.setItem('tgfc_offers',JSON.stringify(OFFERS));}catch(e){}}
+function restoreOffersState(){try{const s=sessionStorage.getItem('tgfc_offers');if(s)OFFERS=JSON.parse(s);}catch(e){}}
+
+// ════════════════════════════════════════════════
+// PROSPECT LEADS
+// ════════════════════════════════════════════════
+
+const PROSPECT_DATA = [
+  // Northeast
+  {id:'p-cheney',company:'Cheney Brothers',city:'Riviera Beach',state:'FL',region:'Southeast',type:'broadline',notes:'Florida-based broadline distributor. 65,000+ SKUs including frozen, meat, dairy, dry grocery.'},
+  {id:'p-gfs',company:'Gordon Food Service',city:'Grand Rapids',state:'MI',region:'Midwest',type:'broadline',notes:'Largest family-owned foodservice distributor in N. America. $12B+ revenue. Strong frozen program.'},
+  {id:'p-ben-e-keith',company:'Ben E. Keith Foods',city:'Fort Worth',state:'TX',region:'South',type:'broadline',notes:'Premier southern US distributor. $5.5B revenue. 14,000+ customers. Strong in protein and frozen.'},
+  {id:'p-shamrock',company:'Shamrock Foods Company',city:'Phoenix',state:'AZ',region:'West',type:'broadline',notes:'Western US broadline distributor. Restaurant, healthcare, education. Family-owned since 1922.'},
+  {id:'p-nicholas',company:'Nicholas & Company',city:'Salt Lake City',state:'UT',region:'West',type:'broadline',notes:'Largest independent broadline distributor in the Intermountain West. Family-owned since 1948.'},
+  {id:'p-driscoll',company:'Driscoll Foods',city:'Westfield',state:'NJ',region:'Northeast',type:'broadline',notes:'Independent family-owned distributor serving Northeast. Full line: frozen, meat, seafood, produce.'},
+  {id:'p-curtze',company:'Curtze Food Service',city:'Erie',state:'PA',region:'Northeast',type:'broadline',notes:'Multi-generational family broadline distributor. PA, OH, NY, WV markets.'},
+  {id:'p-dennis',company:'Dennis Food Service',city:'Bangor',state:'ME',region:'Northeast',type:'broadline',notes:'New England independent broadline distributor. Frozen meats and prepared foods focus.'},
+  {id:'p-harbor',company:'Harbor Foods Group',city:'Seattle',state:'WA',region:'West',type:'broadline',notes:'Pacific Northwest regional distributor. Restaurant, healthcare, school accounts.'},
+  {id:'p-birite',company:'BiRite Foodservice Distributors',city:'San Francisco',state:'CA',region:'West',type:'broadline',notes:'California independent broadline. Restaurants and foodservice operators throughout Bay Area.'},
+  {id:'p-palmer',company:'Palmer Food Services',city:'Syracuse',state:'NY',region:'Northeast',type:'broadline',notes:'Upstate NY regional distributor. Family-owned. Full broadline including frozen foods.'},
+  {id:'p-capitol',company:'Capitol Distributing',city:'Landover',state:'MD',region:'Northeast',type:'broadline',notes:'Mid-Atlantic broadline distributor. Foodservice and retail. Frozen food heavy program.'},
+  {id:'p-cash-wa',company:'Cash-Wa Distributing',city:'Kearney',state:'NE',region:'Midwest',type:'broadline',notes:'Nebraska-based broadline distributor serving Great Plains. Family-owned since 1934.'},
+  {id:'p-gs-foods',company:'GS Foods Group',city:'Portland',state:'OR',region:'West',type:'broadline',notes:'Pacific Northwest broadline. Restaurant and institutional accounts. Frozen and dry focus.'},
+  {id:'p-ginsberg',company:"Ginsberg's Foods",city:'Hudson',state:'NY',region:'Northeast',type:'broadline',notes:'Hudson Valley NY independent distributor. Restaurants, schools, healthcare accounts.'},
+  // Wholesale Grocery
+  {id:'p-cs-wholesale',company:'C&S Wholesale Grocers',city:'Keene',state:'NH',region:'Northeast',type:'wholesale-grocery',notes:'Largest US wholesale grocery company. $33B revenue. 7,700+ customers. Huge frozen program.'},
+  {id:'p-spartannash',company:'SpartanNash',city:'Grand Rapids',state:'MI',region:'Midwest',type:'wholesale-grocery',notes:'$9.4B wholesale grocery distributor. 145+ retail stores. Military commissary supplier.'},
+  {id:'p-awg',company:'Associated Wholesale Grocers',city:'Kansas City',state:'KS',region:'Midwest',type:'wholesale-grocery',notes:'Largest member-owned wholesale cooperative. 3,800+ locations, 31 states. Full frozen program.'},
+  {id:'p-unfi',company:'UNFI (United Natural Foods)',city:'Providence',state:'RI',region:'Northeast',type:'wholesale-grocery',notes:'Largest publicly-traded natural/specialty wholesale distributor. 30,000+ customer locations.'},
+  {id:'p-core-mark',company:'Core-Mark International',city:'Westlake',state:'TX',region:'South',type:'convenience',notes:'Convenience retail distributor. 40,000+ locations. Fresh, frozen, packaged products.'},
+  {id:'p-mclane',company:'McLane Company',city:'Temple',state:'TX',region:'South',type:'convenience',notes:'$51B supply chain services. 110,000+ clients. Convenience stores, mass merchants, drug stores.'},
+  {id:'p-certco',company:'Certco Inc.',city:'Madison',state:'WI',region:'Midwest',type:'wholesale-grocery',notes:'Independent grocery distributor. WI, IL, MN, IA markets. 3 warehouses.'},
+  {id:'p-golbon',company:'Golbon',city:'Boise',state:'ID',region:'West',type:'wholesale-grocery',notes:'Cooperative wholesale distributor for independent grocers in the West. Frozen staples buyer.'},
+  {id:'p-merchant-gro',company:"Merchants Grocery Co.",city:'Roanoke',state:'VA',region:'Southeast',type:'wholesale-grocery',notes:'Virginia-based independent wholesale grocer. Supplies independent retailers throughout Southeast.'},
+  {id:'p-iga',company:'IGA (Fleming Foods Wholesale)',city:'Chicago',state:'IL',region:'Midwest',type:'wholesale-grocery',notes:'IGA wholesale co-op supply chain. 1,000+ independent IGA-affiliated grocery stores nationwide.'},
+  // Specialty / Protein / Meat
+  {id:'p-quaker-valley',company:'Quaker Valley Foods',city:'Monmouth Junction',state:'NJ',region:'Northeast',type:'protein',notes:'Northeast specialty protein distributor. Full line of fresh and frozen proteins for foodservice.'},
+  {id:'p-honor-foods',company:'Honor Foods',city:'Philadelphia',state:'PA',region:'Northeast',type:'specialty',notes:'Burris Logistics sub. Frozen and refrigerated redistribution specialist serving Mid-Atlantic.'},
+  {id:'p-atlas-wholesale',company:'Atlas Wholesale Food Co.',city:'Detroit',state:'MI',region:'Midwest',type:'specialty',notes:'Michigan specialty and ethnic food distributor. Frozen and fresh proteins, specialty items.'},
+  {id:'p-merlino',company:'Merlino Foods',city:'Seattle',state:'WA',region:'West',type:'specialty',notes:'Pacific Northwest Italian food distributor. Frozen pasta, meats, specialty Italian products.'},
+  {id:'p-euclid-fish',company:'Euclid Fish Company',city:'Euclid',state:'OH',region:'Midwest',type:'protein',notes:'Ohio specialty seafood and protein distributor. Fresh and frozen fish, meats for foodservice.'},
+  {id:'p-primes',company:'Prime Source Foods',city:'Farmingdale',state:'NY',region:'Northeast',type:'protein',notes:'Northeast protein specialist. Wholesale frozen and fresh meat, poultry, seafood distributor.'},
+  {id:'p-rawlings',company:'Rawlings Food Service',city:'Denton',state:'TX',region:'South',type:'broadline',notes:'Texas regional foodservice distributor. Frozen and fresh proteins, broadline products.'},
+  {id:'p-henry-foods',company:"Henry's Foods",city:'Atwater',state:'MN',region:'Midwest',type:'broadline',notes:'Minnesota family-owned full line distributor. Independent grocery and foodservice accounts.'},
+  {id:'p-s-w-foods',company:'S&W Wholesale Foods',city:'Hammond',state:'LA',region:'South',type:'broadline',notes:'Southeast Louisiana broadline distributor. Produce, meats, frozen foods, foodservice focus.'},
+  {id:'p-graves',company:'Graves Foods',city:'Jonesboro',state:'AR',region:'South',type:'broadline',notes:'Arkansas broadline distributor. Independent restaurants, healthcare, schools in mid-South.'},
+  {id:'p-food-supply',company:'Food Supply Inc.',city:'Sioux Falls',state:'SD',region:'Midwest',type:'broadline',notes:'South Dakota broadline foodservice distributor. Regional independent, frozen-food buyer.'},
+  {id:'p-schenck',company:'Schenck Foods Company',city:'Ridgefield',state:'NJ',region:'Northeast',type:'specialty',notes:'NJ specialty food distributor. European and domestic specialty frozen and dry products.'},
+  {id:'p-olympic-food',company:'Olympic Food Service',city:'Memphis',state:'TN',region:'South',type:'broadline',notes:'Tennessee/Mid-South regional broadline distributor. Independent restaurant focus.'},
+  {id:'p-reinhart',company:'Reinhart Food Service',city:'La Crosse',state:'WI',region:'Midwest',type:'broadline',notes:'Major Wisconsin-based broadline distributor (Performance Food Group subsidiary). Midwest focus.'},
+  {id:'p-vistar',company:'Vistar (PFG)',city:'Aurora',state:'CO',region:'West',type:'convenience',notes:'PFG subsidiary. Nation-wide vending, theater, convenience, and foodservice distribution.'},
+  // Regional Chains / Retail
+  {id:'p-stater-bros',company:'Stater Bros. Markets',city:'San Bernardino',state:'CA',region:'West',type:'regional-chain',notes:'Southern California regional grocery chain. 170+ stores. Strong frozen buyer for private label.'},
+  {id:'p-price-chopper',company:'Price Chopper / Market 32',city:'Schenectady',state:'NY',region:'Northeast',type:'regional-chain',notes:'Northeast grocery chain. 130+ stores across NY, VT, CT, MA, PA, NH. Major frozen buyer.'},
+  {id:'p-weis',company:'Weis Markets',city:'Sunbury',state:'PA',region:'Northeast',type:'regional-chain',notes:'Mid-Atlantic regional grocer. 200+ stores across PA, MD, NJ, NY, VA, WV, DE.'},
+  {id:'p-brookshire',company:"Brookshire Grocery Company",city:'Tyler',state:'TX',region:'South',type:'regional-chain',notes:'Texas-based regional grocer. 180+ stores in TX, LA, AR. Family-owned. Major frozen buyer.'},
+  {id:'p-ingles',company:'Ingles Markets',city:'Black Mountain',state:'NC',region:'Southeast',type:'regional-chain',notes:'Southeast regional grocer. 190+ stores in NC, SC, GA, TN, VA, AL. Strong frozen category.'},
+  {id:'p-giant-eagle',company:'Giant Eagle',city:'Pittsburgh',state:'PA',region:'Northeast',type:'regional-chain',notes:'PA/OH regional grocer. 470+ stores. Large frozen department. Also operates GetGo c-stores.'},
+  {id:'p-raley',company:"Raley's",city:'West Sacramento',state:'CA',region:'West',type:'regional-chain',notes:'Northern California/Nevada regional grocer. 120+ stores. Premium focus, strong frozen buyer.'},
+  {id:'p-publix',company:'Publix Wholesale Buying',city:'Lakeland',state:'FL',region:'Southeast',type:'regional-chain',notes:'Southeast regional grocer. 1,300+ stores. Major frozen food buyer. Direct vendor relationships.'},
+  {id:'p-hy-vee',company:'Hy-Vee Food Stores',city:'West Des Moines',state:'IA',region:'Midwest',type:'regional-chain',notes:'Iowa-based regional grocer. 280+ stores in 8 Midwest states. Employee-owned. Large frozen buyer.'},
+  {id:'p-hannaford',company:'Hannaford Supermarkets',city:'Scarborough',state:'ME',region:'Northeast',type:'regional-chain',notes:'New England/Mid-Atlantic grocery chain. 180+ stores. Ahold Delhaize subsidiary. Frozen buyer.'},
+  {id:'p-harris-teeter',company:'Harris Teeter',city:'Matthews',state:'NC',region:'Southeast',type:'regional-chain',notes:'Southeast premium grocery chain. 250+ stores. Kroger subsidiary. Strong private label frozen.'},
+  {id:'p-meijer',company:'Meijer Inc.',city:'Grand Rapids',state:'MI',region:'Midwest',type:'regional-chain',notes:'Midwest supercenter chain. 250+ stores in 6 states. Family-owned. Very large frozen buyer.'},
+  {id:'p-wegmans',company:"Wegmans Food Markets",city:'Rochester',state:'NY',region:'Northeast',type:'regional-chain',notes:'Northeast premium grocery chain. 100+ stores. Renowned for prepared foods and frozen selection.'},
+  {id:'p-sprouts',company:'Sprouts Farmers Market',city:'Phoenix',state:'AZ',region:'West',type:'regional-chain',notes:'Natural/organic grocer. 400+ stores nationwide. Strong buyer for natural frozen protein options.'},
+  // Broadline & Foodservice Mid-Size
+  {id:'p-heritage',company:'Heritage Food Service Group',city:'Fort Wayne',state:'IN',region:'Midwest',type:'broadline',notes:'Indiana broadline distributor. Restaurants, healthcare, schools. Full frozen food program.'},
+  {id:'p-kings-hawaiian',company:'Sysco Pacific Northwest',city:'Kent',state:'WA',region:'West',type:'broadline',notes:'Sysco regional operating company. Major frozen food buyer for restaurants and institutions.'},
+  {id:'p-brown-foodservice',company:'Brown Foodservice',city:'Nashville',state:'TN',region:'South',type:'broadline',notes:'Tennessee independent broadline distributor. Full line including frozen meats and proteins.'},
+  {id:'p-carol-g',company:'Carolina Food Service of Loris',city:'Loris',state:'SC',region:'Southeast',type:'broadline',notes:'South Carolina independent broadline distributor. Restaurants and institutions in Carolinas.'},
+  {id:'p-frosty-acres',company:'Frosty Acres Brands',city:'Atlanta',state:'GA',region:'Southeast',type:'specialty',notes:'Cooperative buying group for independent foodservice distributors. Frozen food specialist network.'},
+  {id:'p-quill-corp',company:'Scarmardo Foodservice',city:'Waco',state:'TX',region:'South',type:'broadline',notes:'Texas-based independent broadline distributor. Central Texas restaurants and foodservice.'},
+  {id:'p-pj-foodservice',company:'PJ Foodservice',city:'Columbus',state:'OH',region:'Midwest',type:'broadline',notes:'Ohio regional foodservice distributor. Independent operators, schools, healthcare accounts.'},
+  {id:'p-flowers-foods',company:'Gold Star Foods',city:'Riverside',state:'CA',region:'West',type:'broadline',notes:'California K-12 foodservice distributor. Schools and institutional accounts. Frozen staples buyer.'},
+  {id:'p-quality-food',company:'Quality Food Company',city:'Grand Rapids',state:'MI',region:'Midwest',type:'broadline',notes:'West Michigan independent broadline distributor. Restaurants and healthcare accounts.'},
+  {id:'p-foodpro',company:'FoodPRO',city:'Sheffield Lake',state:'OH',region:'Midwest',type:'broadline',notes:'Northeast Ohio independent broadline distributor. Restaurants, catering, institutional accounts.'},
+  {id:'p-schiff',company:"Schiff's Food Service",city:'Anchorage',state:'AK',region:'West',type:'broadline',notes:'Alaska broadline foodservice distributor. Unique market — frozen food especially critical.'},
+  {id:'p-quaker-valley-foods',company:'Avalon Foodservice',city:'Greenville',state:'SC',region:'Southeast',type:'broadline',notes:'Southeast independent broadline distributor. Restaurants and institutions in Carolinas/Georgia.'},
+  {id:'p-performance-food',company:'Performance Food Group (Southeast)',city:'Richmond',state:'VA',region:'Southeast',type:'broadline',notes:'PFG Southeast regional operations. Major frozen food buyer. 300,000+ restaurant customers.'},
+  {id:'p-glazier',company:'Glazier Foods',city:'Houston',state:'TX',region:'South',type:'broadline',notes:'Houston-based foodservice distributor. Texas and Gulf Coast markets. Frozen and fresh proteins.'},
+  {id:'p-inland',company:'Inland Empire Foods',city:'Riverside',state:'CA',region:'West',type:'broadline',notes:'Southern California foodservice distributor. Restaurant and institutional accounts. Frozen buyer.'},
+  {id:'p-city-line',company:'City Line Distributors',city:'Hartford',state:'CT',region:'Northeast',type:'broadline',notes:'Connecticut broadline foodservice distributor. New England restaurant and foodservice accounts.'},
+  {id:'p-royal-food',company:'Royal Food Service',city:'Miami',state:'FL',region:'Southeast',type:'broadline',notes:'South Florida broadline foodservice distributor. Restaurants, hotels, catering accounts.'},
+  {id:'p-festive-foods',company:'Festive Foods',city:'Gainesville',state:'FL',region:'Southeast',type:'broadline',notes:'North Florida/Southeast independent broadline. Full line including frozen prepared proteins.'},
+  // Convenience & C-Store
+  {id:'p-amcon',company:'AMCON Distributing Company',city:'Omaha',state:'NE',region:'Midwest',type:'convenience',notes:'Midwest c-store distributor. 6,000+ customers. NE, SD, ND, MN, IA, CO, WY markets.'},
+  {id:'p-holiday-wholesale',company:'Holiday Wholesale Inc.',city:'Wausau',state:'WI',region:'Midwest',type:'convenience',notes:'Wisconsin family-owned c-store and foodservice distributor. WI, IL, IA, MI, MN territory.'},
+  {id:'p-f-mcconnell',company:'F. McConnell and Sons',city:'Indianapolis',state:'IN',region:'Midwest',type:'convenience',notes:'Indiana family-owned c-store distributor. IN, OH, MI, KY market. Frozen snack food buyer.'},
+  {id:'p-s-abraham',company:'S. Abraham and Sons',city:'Grand Rapids',state:'MI',region:'Midwest',type:'convenience',notes:'Michigan family c-store distributor. MI, OH, IL, IN, WI, KY, PA, WV territory.'},
+  {id:'p-mwi',company:'MWI (McLane Wholesale Ind.)',city:'Omaha',state:'NE',region:'Midwest',type:'convenience',notes:'Nebraska c-store and wholesale distributor. MO, KS, NE, IA, IL, OK, AR territory.'},
+  // More broadline and specialty
+  {id:'p-kaufman',company:'Kaufman Container',city:'Cleveland',state:'OH',region:'Midwest',type:'broadline',notes:'Ohio-based distributor of packaging and food products. Foodservice and retail accounts in Midwest.'},
+  {id:'p-prattes',company:'Pratts Foodservice',city:'Roanoke',state:'VA',region:'Southeast',type:'broadline',notes:'Virginia broadline foodservice distributor. Restaurants, healthcare, education accounts.'},
+  {id:'p-gs-dunn',company:'GS Dunn & Company',city:'Hamilton',state:'OH',region:'Midwest',type:'specialty',notes:'Ohio specialty food distributor. Milled products and specialty frozen ingredients for food mfg.'},
+  {id:'p-north-state',company:'North State Grocery',city:'Grass Valley',state:'CA',region:'West',type:'regional-chain',notes:'California independent grocery cooperative. 30+ stores. Independent frozen food buyer.'},
+  {id:'p-coburn',company:'Coburn Supply Foodservice',city:'Beaumont',state:'TX',region:'South',type:'broadline',notes:'Texas/Gulf Coast broadline foodservice distributor. Independent restaurants and institutions.'},
+  {id:'p-troyer-foods',company:'Troyer Foods',city:'Goshen',state:'IN',region:'Midwest',type:'broadline',notes:'Indiana broadline distributor. Family-owned. IN, OH, MI restaurants and foodservice.'},
+  {id:'p-donahue',company:'Donahue Schriber Realty (Stater Bros related)',city:'Atlanta',state:'GA',region:'Southeast',type:'broadline',notes:'Southeast regional foodservice distributor. Restaurant and foodservice accounts in GA and FL.'},
+  {id:'p-golub',company:'The Golub Corporation (Price Chopper parent)',city:'Schenectady',state:'NY',region:'Northeast',type:'regional-chain',notes:'Northeast grocery operator. Direct frozen food purchasing for 130+ stores.'},
+  {id:'p-fresh-market',company:'The Fresh Market',city:'Greensboro',state:'NC',region:'Southeast',type:'regional-chain',notes:'Southeast premium specialty grocer. 160+ stores. Upscale frozen and specialty buyer.'},
+  {id:'p-woodstock',company:'Woodstock Farms (UNFI sub)',city:'Dayville',state:'CT',region:'Northeast',type:'specialty',notes:'UNFI natural/organic distribution arm. Specialty and organic frozen food distribution.'},
+  {id:'p-palace',company:'Palace Food Service',city:'Baton Rouge',state:'LA',region:'South',type:'broadline',notes:'Louisiana independent broadline distributor. Restaurants, casinos, healthcare accounts.'},
+  {id:'p-penn-traffic',company:'Penn Traffic (Big M Supermarkets)',city:'Syracuse',state:'NY',region:'Northeast',type:'regional-chain',notes:'Upstate NY grocery operator. Independent store group. Frozen food direct buyer.'},
+  {id:'p-nash-finch',company:'Nash Finch (SpartanNash sub)',city:'Minneapolis',state:'MN',region:'Midwest',type:'wholesale-grocery',notes:'Midwest wholesale grocery arm. Military commissary and independent retailer supply.'},
+  {id:'p-big-y',company:'Big Y Foods',city:'Springfield',state:'MA',region:'Northeast',type:'regional-chain',notes:'New England regional grocer. 70+ stores in MA and CT. Family-owned. Direct frozen buyer.'},
+  {id:'p-insalaco',company:"Insalaco's Inc.",city:'Endicott',state:'NY',region:'Northeast',type:'regional-chain',notes:'Upstate NY independent grocery chain. 13 stores. Direct buyer for frozen protein and prepared.'},
+  {id:'p-cosentinos',company:"Cosentino's (Kansas City)",city:'Overland Park',state:'KS',region:'Midwest',type:'regional-chain',notes:'Kansas City area independent grocery group. Price Chopper/Cosentino stores. Frozen buyer.'},
+  {id:'p-strack',company:'Strack & Van Til',city:'Highland',state:'IN',region:'Midwest',type:'regional-chain',notes:'Northwest Indiana/Illinois independent grocery chain. 35+ stores. Direct frozen buyer.'},
+  {id:'p-karns',company:"Karns Quality Foods",city:'Mechanicsburg',state:'PA',region:'Northeast',type:'regional-chain',notes:'Central Pennsylvania independent grocer. 10+ stores. Direct buyer for proteins and frozen.'},
+  {id:'p-foodland',company:'Foodland Supermarkets',city:'Honolulu',state:'HI',region:'West',type:'regional-chain',notes:'Hawaii regional grocery chain. 30+ stores. Island market — frozen food very high priority.'},
+  {id:'p-central-mkt',company:'Central Market (HEB sub)',city:'Austin',state:'TX',region:'South',type:'regional-chain',notes:'HEB premium specialty grocery chain. Texas. Direct frozen specialty food buyer.'},
+  {id:'p-stew-leonard-CT',company:"Stew Leonard's (CT/NJ/NY)",city:'Norwalk',state:'CT',region:'Northeast',type:'regional-chain',notes:'Northeast specialty grocery retailer. 7 stores. Known for direct buying relationships.'},
+  {id:'p-rouses',company:'Rouses Markets',city:'Thibodaux',state:'LA',region:'South',type:'regional-chain',notes:'Gulf Coast grocery chain. 65+ stores in LA, MS, AL. Family-owned. Direct frozen food buyer.'},
+  {id:'p-piggly-wiggly-mw',company:'Piggly Wiggly Midwest',city:'Sheboygan',state:'WI',region:'Midwest',type:'wholesale-grocery',notes:'Midwest Piggly Wiggly cooperative. 200+ independent stores in WI, IL, IA. Wholesale frozen buyer.'},
+];
+
+let prospectAddedIds = new Set(); // track which prospects have been added to LEADS
+
+function renderProspects() {
+  const refreshEl = document.getElementById('prospect-refresh-date');
+  if (refreshEl) {
+    // Show most recent Monday
+    const d = new Date();
+    const day = d.getDay();
+    const diff = day === 0 ? 6 : day - 1;
+    d.setDate(d.getDate() - diff);
+    refreshEl.textContent = d.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+  }
+
+  const q = (document.getElementById('prospectSearch')?.value || '').toLowerCase();
+  const typeF = document.getElementById('prospectTypeFilter')?.value || '';
+  const regionF = document.getElementById('prospectRegionFilter')?.value || '';
+  const hideAdded = document.getElementById('prospectHideAdded')?.checked;
+
+  let rows = PROSPECT_DATA.filter(p => {
+    if (hideAdded && prospectAddedIds.has(p.id)) return false;
+    const mq = !q || p.company.toLowerCase().includes(q) || (p.city||'').toLowerCase().includes(q) || (p.state||'').toLowerCase().includes(q) || (p.notes||'').toLowerCase().includes(q);
+    const mt = !typeF || p.type === typeF;
+    const mr = !regionF || p.region === regionF;
+    return mq && mt && mr;
+  });
+
+  const countEl = document.getElementById('prospect-count');
+  if (countEl) countEl.textContent = rows.length + ' of ' + PROSPECT_DATA.length + ' prospects';
+
+  const wrap = document.getElementById('prospect-table-wrap');
+  if (!wrap) return;
+
+  if (!rows.length) {
+    wrap.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px">No prospects match your filters.</div>';
+    return;
+  }
+
+  const typeLabels = {broadline:'Broadline','wholesale-grocery':'Wholesale Grocery',specialty:'Specialty',protein:'Meat & Protein',convenience:'C-Store / Conv.',
+'regional-chain':'Regional Chain'};
+
+  wrap.innerHTML = '<table><thead><tr>' +
+    '<th>Company</th><th>Location</th><th>Region</th><th>Type</th><th>Notes</th><th></th>' +
+    '</tr></thead><tbody>' +
+    rows.map(p => {
+      const isAdded = prospectAddedIds.has(p.id);
+      const btn = isAdded
+        ? '<button class="add-prospect-btn added" disabled>✓ Added</button>'
+        : '<button class="add-prospect-btn" onclick="addProspectToLeads(\'' + p.id + '\')">+ Add to Leads</button>';
+      return '<tr class="' + (isAdded ? 'already-added' : '') + '">' +
+        '<td style="font-weight:600;color:var(--text-primary);min-width:160px">' + p.company + '</td>' +
+        '<td style="color:var(--text-secondary);font-size:12.5px;white-space:nowrap">' + (p.city ? p.city + ', ' : '') + p.state + '</td>' +
+        '<td style="white-space:nowrap"><span class="prospect-tag ' + p.type + '">' + (typeLabels[p.type]||p.type) + '</span></td>' +
+        '<td style="font-size:12px;color:var(--text-secondary)">' + p.region + '</td>' +
+        '<td style="font-size:12px;color:var(--text-muted);max-width:280px">' + (p.notes||'') + '</td>' +
+        '<td style="white-space:nowrap;text-align:right">' + btn + '</td>' +
+      '</tr>';
+    }).join('') +
+    '</tbody></table>';
+}
+
+function addProspectToLeads(pid) {
+  const p = PROSPECT_DATA.find(x => x.id === pid);
+  if (!p) return;
+  // Don't duplicate
+  if (LEADS.find(l => l.company.toLowerCase() === p.company.toLowerCase())) {
+    showToast(p.company + ' is already in your leads', 'amber');
+    prospectAddedIds.add(pid);
+    renderProspects();
+    return;
+  }
+  const newLead = {
+    id: 'lead-' + pid + '-' + Date.now(),
+    company: p.company,
+    address: '', city: p.city, state: p.state, zip: '', tz: stateTz(p.state),
+    contact: '', title: '', phone: '', email: '',
+    status: 'Prospect',
+    notes: p.notes || '',
+    campaign: null, step: 0,
+    activity: [{type:'note', text:'Added from Prospect Leads tab', time: new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}],
+    followUps: []
+  };
+  LEADS.push(newLead);
+  prospectAddedIds.add(pid);
+  showToast(p.company + ' added to Leads ✓');
+  renderProspects();
+  renderDashboard();
+}
+
+function stateTz(state) {
+  const et = ['CT','DC','DE','FL','GA','IN','KY','MA','MD','ME','MI','NC','NH','NJ','NY','OH','PA','RI','SC','TN','VA','VT','WV'];
+  const ct = ['AL','AR','IA','IL','KS','LA','MN','MO','MS','ND','NE','OK','SD','TX','WI'];
+  const mt = ['AZ','CO','ID','MT','NM','UT','WY'];
+  const pt = ['CA','NV','OR','WA'];
+  if (et.includes(state)) return 'America/New_York';
+  if (ct.includes(state)) return 'America/Chicago';
+  if (mt.includes(state)) return 'America/Denver';
+  if (pt.includes(state)) return 'America/Los_Angeles';
+  if (state === 'HI') return 'Pacific/Honolulu';
+  if (state === 'AK') return 'America/Anchorage';
+  return 'America/New_York';
+}
+
+function refreshProspects() {
+  showToast('Prospect list refreshed ✓');
+  renderProspects();
+}
+
 // CALENDAR
 // ════════════════════════════════════════════════
 let calYear = new Date().getFullYear();
@@ -1175,9 +1963,11 @@ function getAllCalEvents() {
 }
 
 function renderCalendar() {
-  document.getElementById('cal-month-label').textContent = MONTH_NAMES[calMonth] + ' ' + calYear;
-
   const grid = document.getElementById('cal-grid');
+  const monthLabel = document.getElementById('cal-month-label');
+  if (!grid || !monthLabel) return;
+  monthLabel.textContent = MONTH_NAMES[calMonth] + ' ' + calYear;
+
   const today = new Date(); today.setHours(0,0,0,0);
   const todayStr = today.toISOString().split('T')[0];
 
@@ -1318,7 +2108,7 @@ function saveCalEvent() {
   }
   hideModal('calEventModal');
   showToast(editingEventId ? 'Event updated' : 'Event saved');
-  renderCalendar();
+  if (document.getElementById('page-calendar').classList.contains('active')) renderCalendar();
   renderDashboard();
 }
 
@@ -1327,7 +2117,7 @@ function deleteCalEvent() {
   calEvents = calEvents.filter(e => e.id !== editingEventId);
   hideModal('calEventModal');
   showToast('Event deleted');
-  renderCalendar();
+  if (document.getElementById('page-calendar').classList.contains('active')) renderCalendar();
 }
 
 function showEventDetail(evId) {
@@ -1472,8 +2262,85 @@ function renderDashboard(){
     }
   }
 
-  if(el_badge) el_badge.textContent = active.length;
-  if(el_date) el_date.textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const _el_badge=document.getElementById('nav-badge-leads');if(_el_badge) _el_badge.textContent = active.length;
+  const _el_cbadge=document.getElementById('nav-badge-customers');if(_el_cbadge) _el_cbadge.textContent = LEADS.filter(l=>l.status==='Customer').length || '—';
+  const _el_date=document.getElementById('dash-date');if(_el_date) _el_date.textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+}
+
+// ════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+// CUSTOMERS
+// ════════════════════════════════════════════════
+
+function renderCustomersPage() {
+  const q = (document.getElementById('customersSearch')?.value || '').toLowerCase();
+  const stateF = document.getElementById('customersStateFilter')?.value || '';
+  const tzF = document.getElementById('customersTzFilter')?.value || '';
+
+  const pool = LEADS.filter(l => l.status === 'Customer');
+  let rows = pool.filter(l => {
+    const mq = !q || l.company.toLowerCase().includes(q) || (l.contact||'').toLowerCase().includes(q) || (l.city||'').toLowerCase().includes(q);
+    const ms = !stateF || l.state === stateF;
+    const mtz = !tzF || l.tz === tzF;
+    return mq && ms && mtz;
+  }).sort((a,b) => a.company.toLowerCase().localeCompare(b.company.toLowerCase()));
+
+  const showingEl = document.getElementById('customers-showing');
+  if (showingEl) showingEl.textContent = rows.length + ' of ' + pool.length + ' customers';
+
+  const tbody = document.getElementById('customers-tbody');
+  if (!tbody) return;
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🤝</div><div class="empty-title">No customers yet</div><div class="empty-sub">Add a customer directly, or convert a lead to Customer from their profile.</div></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(l => {
+    const tz = l.tz ? tzLabel(l.tz).split('—')[0].trim() : '—';
+    return '<tr onclick="openProfile(\'' + l.id + '\')" style="cursor:pointer">' +
+      '<td><div class="td-company">' + l.company + '</div>' + (l.city || l.state ? '<div class="td-sub">' + [l.address, l.city, l.state].filter(Boolean).join(', ') + '</div>' : '') + '</td>' +
+      '<td>' + (l.contact ? '<div style="font-weight:500;font-size:13px">' + l.contact + '</div>' : '<span class="td-muted">—</span>') + '</td>' +
+      '<td class="td-muted">' + (l.title||'—') + '</td>' +
+      '<td class="td-muted">' + ([l.city, l.state].filter(Boolean).join(', ')||'—') + '</td>' +
+      '<td class="td-muted">' + tz + '</td>' +
+      '<td class="td-mono">' + (l.phone||'—') + '</td>' +
+      '<td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openProfile(\'' + l.id + '\')" style="font-size:11px;padding:4px 10px">View Profile</button></td>' +
+    '</tr>';
+  }).join('');
+
+  // Update nav badge
+  const badge = document.getElementById('nav-badge-customers');
+  if (badge) badge.textContent = pool.length || '—';
+}
+
+function addCustomer() {
+  const company = document.getElementById('nc-company').value.trim();
+  if (!company) { showToast('Company name is required', 'amber'); return; }
+  const state = document.getElementById('nc-state').value.trim().toUpperCase();
+  const lead = {
+    id: 'cust-' + Date.now(),
+    company,
+    contact: document.getElementById('nc-contact').value.trim(),
+    title: document.getElementById('nc-title').value.trim(),
+    phone: document.getElementById('nc-phone').value.trim(),
+    email: document.getElementById('nc-email').value.trim(),
+    address: document.getElementById('nc-address').value.trim(),
+    city: document.getElementById('nc-city').value.trim(),
+    state,
+    zip: document.getElementById('nc-zip').value.trim(),
+    tz: stateTz(state),
+    status: 'Customer',
+    notes: document.getElementById('nc-notes').value.trim(),
+    campaign: null, step: 0,
+    activity: [{ type: 'status-change', text: 'Added directly as Customer', time: new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) }],
+    followUps: []
+  };
+  LEADS.push(lead);
+  hideModal('addCustomerModal');
+  showToast(company + ' added as customer ✓');
+  renderCustomersPage();
+  renderDashboard();
 }
 
 // ════════════════════════════════════════════════
@@ -1481,14 +2348,16 @@ function renderDashboard(){
 // ════════════════════════════════════════════════
 const TAB_CONTEXT={
   active:'Showing leads you are actively pursuing. Click any row to open the full profile. Change status from within the profile to move leads to Customers or Archive.',
-  customer:'Converted customers are stored here for reference and are removed from your active pipeline.',
   archived:'Unqualified or cold leads. Kept for reference. Reactivate from within any profile.'
 };
 function setLeadsTab(tab){
   currentTab=tab;
-  ['active','customer','archived'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('active',t===tab));
-  document.getElementById('statusFilter').style.display=tab==='active'?'':'none';
-  document.getElementById('tab-context').textContent=TAB_CONTEXT[tab];
+  ['active','archived'].forEach(t=>{
+    const el=document.getElementById('tab-'+t); if(el) el.classList.toggle('active',t===tab);
+  });
+  const sfEl=document.getElementById('statusFilter');
+  if(sfEl) sfEl.style.display=tab==='active'?'':'none';
+  const _el_tab_context=document.getElementById('tab-context');if(_el_tab_context){_el_tab_context.textContent=TAB_CONTEXT[tab]||'';}
   renderLeadsTable();
 }
 function renderLeadsTable(){
@@ -1496,10 +2365,9 @@ function renderLeadsTable(){
   const stateF=document.getElementById('stateFilter').value;
   const statusF=currentTab==='active'?document.getElementById('statusFilter').value:'';
   const tzF=document.getElementById('tzFilter').value;
-  let pool=currentTab==='active'?LEADS.filter(l=>ACTIVE_STATUSES.includes(l.status)):currentTab==='customer'?LEADS.filter(l=>l.status==='Customer'):LEADS.filter(l=>l.status==='Archived');
-  document.getElementById('tc-active').textContent=LEADS.filter(l=>ACTIVE_STATUSES.includes(l.status)).length;
-  document.getElementById('tc-customer').textContent=LEADS.filter(l=>l.status==='Customer').length;
-  document.getElementById('tc-archived').textContent=LEADS.filter(l=>l.status==='Archived').length;
+  let pool=currentTab==='active'?LEADS.filter(l=>ACTIVE_STATUSES.includes(l.status)):LEADS.filter(l=>l.status==='Archived');
+  const _el_tc_active=document.getElementById('tc-active');if(_el_tc_active){_el_tc_active.textContent=LEADS.filter(l=>ACTIVE_STATUSES.includes(l.status)).length;}
+  const _el_tc_archived=document.getElementById('tc-archived');if(_el_tc_archived){_el_tc_archived.textContent=LEADS.filter(l=>l.status==='Archived').length;}
   let rows=pool.filter(l=>{
     const mq=!q||l.company.toLowerCase().includes(q)||(l.contact||'').toLowerCase().includes(q)||(l.email||'').toLowerCase().includes(q)||(l.city||'').toLowerCase().includes(q);
     const ms=!stateF||l.state===stateF;
@@ -1507,10 +2375,10 @@ function renderLeadsTable(){
     const mtz=!tzF||l.tz===tzF;
     return mq&&ms&&mst&&mtz;
   }).sort((a,b)=>a.company.toLowerCase().localeCompare(b.company.toLowerCase()));
-  document.getElementById('leads-showing').textContent=`${rows.length} of ${pool.length} ${currentTab==='active'?'active leads':currentTab==='customer'?'customers':'archived leads'}`;
+  const _el_leads_showing=document.getElementById('leads-showing');if(_el_leads_showing){_el_leads_showing.textContent=`${rows.length} of ${pool.length} ${currentTab==='active'?'active leads':'archived leads'}`;}
   const tbody=document.getElementById('leads-tbody');
   if(!rows.length){
-    tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">${currentTab==='customer'?'🤝':currentTab==='archived'?'🗂️':'📋'}</div><div class="empty-title">${currentTab==='customer'?'No customers yet':'No leads here'}</div><div class="empty-sub">${currentTab==='active'?'Add a lead to get started.':currentTab==='customer'?'Mark a lead as Customer from their profile.':'Archive a lead from their profile.'}</div></div></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">${currentTab==='archived'?'🗂️':'📋'}</div><div class="empty-title">${currentTab==='archived'?'No archived leads':'No leads here'}</div><div class="empty-sub">${currentTab==='active'?'Add a lead to get started.':'Archive a lead from their profile.'}</div></div></td></tr>`;
     return;
   }
 // Returns a label if the lead has a campaign email, calendar event, or follow-up due today
@@ -1570,7 +2438,7 @@ function openProfile(id){
   document.querySelectorAll('.nav-item')[1].classList.add('active');
   gotoPage('profile');
   // update header with breadcrumb
-  document.getElementById('header-title').textContent='';
+  const _el_header_title=document.getElementById('header-title');if(_el_header_title){_el_header_title.textContent='';}
   document.getElementById('header-content').innerHTML=`
     <div class="header-crumb">
       <a onclick="backToLeads()">Leads</a>
@@ -1609,8 +2477,8 @@ function buildProfilePage(l){
 
     <!-- Quick actions -->
     <div class="profile-sidebar-actions">
-      <button class="btn btn-primary btn-sm" style="justify-content:center" onclick="showToast('Email draft opened')">📧 Send Email</button>
-      <button class="btn btn-secondary btn-sm" style="justify-content:center" onclick="logCall()">📞 Log Call</button>
+      <button class="btn btn-primary btn-sm" style="justify-content:center" onclick="generateDraft('${l.id}')">📧 Generate Draft</button>
+      <button class="btn btn-secondary btn-sm" style="justify-content:center" onclick="openLogCallModal()">📞 Log Call</button>
       <button class="btn btn-secondary btn-sm" style="justify-content:center;color:var(--navy);border-color:rgba(59,65,118,.3)" onclick="openFollowUpModal()">📅 Add Follow-Up</button>
       <button class="btn btn-green btn-sm" style="justify-content:center" onclick="openEnrollModal()">📧 Enroll in Campaign</button>
     </div>
@@ -1732,7 +2600,7 @@ function toggleEditMode(){
   if(!l) return;
   editMode=!editMode;
   document.getElementById('profile-fields').innerHTML = editMode ? renderEditFields(l) : renderViewFields(l);
-  document.getElementById('edit-btn').textContent = editMode ? 'Cancel' : '✏️ Edit';
+  const _el_edit_btn=document.getElementById('edit-btn');if(_el_edit_btn){_el_edit_btn.textContent=editMode ? 'Cancel' : '✏️ Edit';}
   // show/hide save bar
   const existing = document.getElementById('save-bar');
   if(existing) existing.remove();
@@ -1776,7 +2644,11 @@ function changeStatus(newStatus){
   l.activity.push({type:'status-change',text:`Status changed: ${old} → ${newStatus}`,time:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})});
   const msg=newStatus==='Customer'?`${l.company} moved to Customers ✓`:newStatus==='Archived'?`${l.company} archived`:`Status updated to ${newStatus}`;
   showToast(msg);
-  if(newStatus==='Customer'||newStatus==='Archived'){
+  if(newStatus==='Customer'){
+    // Route to customers page
+    gotoPage('customers', document.querySelectorAll('.nav-item')[2]);
+    renderCustomersPage();
+  } else if(newStatus==='Archived'){
     backToLeads();
   } else {
     buildProfilePage(l);
@@ -1793,7 +2665,7 @@ function saveNote(){
   if(!txt){ showToast('Note is empty','amber'); return; }
   l.activity.push({type:'note',text:txt,time:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})});
   if(l.notes) l.notes+=' · '+txt; else l.notes=txt;
-  document.getElementById('noteInput').value='';
+  const _noteEl=document.getElementById('noteInput');if(_noteEl)_noteEl.value='';
   // re-render notes and timeline
   const nl=document.getElementById('notes-list');
   if(nl) nl.innerHTML=l.activity.filter(a=>a.type==='note').map(n=>`<div class="note-card"><div class="note-text">${n.text}</div><div class="note-time">${n.time}</div></div>`).join('');
@@ -1872,8 +2744,8 @@ function openComposer(leadId, emailIdx){
   const firstName=l.contact?l.contact.split(' ')[0]:'[First Name]';
   const subject=tpl.subject.replace(/\[First Name\]/g,firstName).replace(/\[Company Name\]/g,l.company);
   const body=tpl.body.replace(/\[First Name\]/g,firstName).replace(/\[Company Name\]/g,l.company);
-  document.getElementById('composer-step-badge').textContent=stepInfo.label;
-  document.getElementById('composer-timing-badge').textContent=stepInfo.timing?'⏰ '+stepInfo.timing:'';
+  const _el_composer_step_badge=document.getElementById('composer-step-badge');if(_el_composer_step_badge){_el_composer_step_badge.textContent=stepInfo.label;}
+  const _el_composer_timing_badge=document.getElementById('composer-timing-badge');if(_el_composer_timing_badge){_el_composer_timing_badge.textContent=stepInfo.timing?'⏰ '+stepInfo.timing:'';}
   document.getElementById('composer-to-line').innerHTML=`<strong>To:</strong> ${l.contact||l.company}${l.email?' &lt;'+l.email+'&gt;':' <span style="color:var(--amber)">(no email on file)</span>'}`;
   document.getElementById('composer-subject').value=subject;
   document.getElementById('composer-body').value=body;
@@ -1903,6 +2775,76 @@ function markEmailSent(){
   hideModal('composerModal');
   showToast(`${stepInfo.label} marked as sent`,'green');
   buildProfilePage(l); renderLeadsTable(); renderDashboard();
+}
+
+// Open composer content — send directly if signed in, else mailto: fallback
+async function openInOutlook() {
+  const l = LEADS.find(x => x.id === composerLeadId);
+  const to = l && l.email ? l.email : '';
+  const subject = document.getElementById('composer-subject').value;
+  const body = document.getElementById('composer-body').value;
+
+  if (msalAccount || googleAccessToken) {
+    if (!to) { showToast('No email address on file for this lead', 'amber'); return; }
+    const provider = msalAccount ? 'Outlook' : 'Gmail';
+    showToast('Sending via ' + provider + '…');
+    const ok = await sendViaEmail(to, subject, body);
+    if (ok) {
+      showToast('Email sent via ' + provider + ' ✓');
+    } else {
+      showToast('Send failed — check your email connection', 'amber');
+    }
+    return;
+  }
+
+  // Fallback: mailto: opens default mail client
+  window.location.href = 'mailto:' + encodeURIComponent(to) +
+    '?subject=' + encodeURIComponent(subject) +
+    '&body=' + encodeURIComponent(body);
+}
+
+// Generate a draft from the lead profile sidebar
+async function generateDraft(leadId) {
+  const l = LEADS.find(x => x.id === leadId);
+  if (!l) return;
+
+  // If enrolled in campaign, open the campaign composer
+  if (l.campaign) {
+    const c = CAMPAIGNS.find(x => x.id === l.campaign);
+    const ci = c ? c.enrolledIds.indexOf(l.id) : -1;
+    const step = (c && ci >= 0) ? (c.enrolledSteps[ci] || 1) : 1;
+    openComposer(leadId, step);
+    return;
+  }
+
+  // Use Email 1 template
+  const c = CAMPAIGNS.find(x => x.id === 'standard-outreach');
+  const tpl = (c && c.templates && c.templates['email-1']) ? c.templates['email-1'] : { subject: '', body: '' };
+  const firstName = l.contact ? l.contact.split(' ')[0] : l.company;
+  const subject = tpl.subject.replace(/\[First Name\]/g, firstName).replace(/\[Company Name\]/g, l.company);
+  const body = tpl.body.replace(/\[First Name\]/g, firstName).replace(/\[Company Name\]/g, l.company);
+  const to = l.email || '';
+
+  // If signed in, open the composer so user can review before sending
+  if (msalAccount || googleAccessToken) {
+    // Set composer state so markEmailSent/openInOutlook work
+    composerLeadId = leadId;
+    composerEmailIdx = 1;
+    document.getElementById('composer-step-badge').textContent = 'Email 1';
+    document.getElementById('composer-timing-badge').textContent = '';
+    document.getElementById('composer-to-line').innerHTML = '<strong>To:</strong> ' + (l.contact || l.company) + (to ? ' &lt;' + to + '&gt;' : ' <span style="color:var(--amber)">(no email on file)</span>');
+    document.getElementById('composer-subject').value = subject;
+    document.getElementById('composer-body').value = body;
+    showModal('composerModal');
+    return;
+  }
+
+  // Fallback: mailto: link
+  const mailto = 'mailto:' + encodeURIComponent(to) +
+    '?subject=' + encodeURIComponent(subject) +
+    '&body=' + encodeURIComponent(body);
+  window.location.href = mailto;
+  showToast('Draft opened in Outlook');
 }
 
 // Save edited content back to the template
@@ -1948,9 +2890,34 @@ function saveTemplate(){
     subject: document.getElementById('template-subject-input').value,
     body: document.getElementById('template-body-input').value
   };
-  showToast('Template saved','green');
+  // Persist to sessionStorage (works on file:// URLs unlike localStorage)
+  try {
+    const saved = {};
+    Object.keys(c.templates).forEach(k => {
+      saved[k] = { subject: c.templates[k].subject, body: c.templates[k].body };
+    });
+    sessionStorage.setItem('tgfc_templates', JSON.stringify(saved));
+  } catch(e) {}
+  showToast('Template saved ✓ — use "Save to File" to make permanent','green');
   hideModal('templateEditModal');
   renderCadencePanel('standard-outreach');
+}
+
+// Restore any saved template edits from sessionStorage on startup
+function restoreTemplates(){
+  try {
+    const saved = sessionStorage.getItem('tgfc_templates');
+    if (!saved) return;
+    const parsed = JSON.parse(saved);
+    const c = CAMPAIGNS.find(x=>x.id==='standard-outreach');
+    if (!c||!c.templates) return;
+    Object.keys(parsed).forEach(k => {
+      if (c.templates[k]) {
+        c.templates[k].subject = parsed[k].subject;
+        c.templates[k].body = parsed[k].body;
+      }
+    });
+  } catch(e) {}
 }
 
 function openEnrollModal(){
@@ -2027,7 +2994,7 @@ function addLead(){
 // CAMPAIGNS VIEW
 // ════════════════════════════════════════════════
 function renderCampaignsList(){
-  document.getElementById('camp-list').innerHTML=CAMPAIGNS.map(c=>{
+  const _el_camp_list=document.getElementById('camp-list');if(_el_camp_list)_el_camp_list.innerHTML=CAMPAIGNS.map(c=>{
     // Count total email touches
     const emailCount = c.weeks ? c.weeks.reduce((a,w)=>a+w.steps.filter(s=>s.type==='email').length,0) : (c.steps||[]).filter(s=>s.type==='email').length;
     const totalDays = c.weeks ? 35 : '—';
@@ -2115,7 +3082,7 @@ function renderCadencePanel(id){
     ? c.enrolledIds.map((lid,ei)=>buildEnrolledCard(lid,ei,c)).join('')
     : '<div style="color:var(--text-muted);font-size:13px;padding:4px 0">No leads enrolled yet. Open any lead profile to enroll them.</div>';
 
-  document.getElementById('cadence-panel-wrap').innerHTML=`
+  const _el_cadence_panel_wrap=document.getElementById('cadence-panel-wrap');if(_el_cadence_panel_wrap)_el_cadence_panel_wrap.innerHTML=`
     <div class="cadence-panel">
       <div class="cadence-header">
         <div>
@@ -2247,13 +3214,77 @@ function markFollowUpDone(leadId, fuId) {
 }
 
 // Log a call
-function logCall() {
+function renderTimeline(l){
+  const acts=[...l.activity].reverse();
+  if (!acts.length) return '<div style="color:var(--text-muted);font-size:13px">No activity logged yet.</div>';
+  return acts.map((a,ri) => {
+    // real index in original array (reversed)
+    const origIdx = l.activity.length - 1 - ri;
+    const icon = a.type==='email'?'✉':a.type==='call'?'📞':a.type==='campaign'?'📧':'📝';
+    const canDelete = a.type === 'call' || a.type === 'note' || a.type === 'status-change';
+    const deleteBtn = canDelete
+      ? `<button onclick="deleteActivity('${l.id}',${origIdx})" title="Remove" style="flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:13px;padding:2px 4px;border-radius:4px;line-height:1;opacity:0.5;transition:opacity .15s" onmouseover="this.style.opacity=1;this.style.color='#c03c2d'" onmouseout="this.style.opacity=0.5;this.style.color='var(--text-muted)'">✕</button>`
+      : '';
+    const notesHtml = a.notes
+      ? `<div style="margin-top:5px;padding:7px 10px;background:var(--surface-warm);border-radius:6px;font-size:12px;color:var(--text-secondary);line-height:1.5;white-space:pre-wrap">${a.notes}</div>`
+      : '';
+    return `<div class="tl-item">
+      <div class="tl-dot ${a.type}">${icon}</div>
+      <div class="tl-content" style="flex:1;min-width:0">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div class="tl-title" style="flex:1">${a.text}</div>
+          ${deleteBtn}
+        </div>
+        <div class="tl-time">${a.time}</div>
+        ${notesHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteActivity(leadId, idx) {
+  const l = LEADS.find(x => x.id === leadId);
+  if (!l || !l.activity[idx]) return;
+  l.activity.splice(idx, 1);
+  // Re-render just the timeline
+  const tl = document.getElementById('timeline-list');
+  if (tl) tl.innerHTML = renderTimeline(l);
+}
+
+function openLogCallModal() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('lc-date-input').value = today;
+  document.getElementById('lc-duration-select').value = '';
+  document.getElementById('lc-outcome-select').value = '';
+  document.getElementById('lc-notes-input').value = '';
+  showModal('logCallModal');
+}
+
+function saveLogCall() {
   const l = LEADS.find(x => x.id === currentLeadId);
   if (!l) return;
-  const now = new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
-  l.activity.push({ type: 'call', text: 'Call logged', time: now });
+  const date = document.getElementById('lc-date-input').value;
+  const duration = document.getElementById('lc-duration-select').value;
+  const outcome = document.getElementById('lc-outcome-select').value;
+  const notes = document.getElementById('lc-notes-input').value.trim();
+  const displayDate = date
+    ? new Date(date + 'T12:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
+    : new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  const parts = ['Call logged'];
+  if (outcome) parts.push(outcome);
+  if (duration) parts.push(duration);
+  const entry = {
+    type: 'call',
+    text: parts.join(' · '),
+    time: displayDate,
+    notes: notes || null
+  };
+  l.activity.push(entry);
+  hideModal('logCallModal');
   showToast('Call logged');
-  buildProfilePage(l);
+  // Re-render just the timeline rather than full page rebuild
+  const tl = document.getElementById('timeline-list');
+  if (tl) tl.innerHTML = renderTimeline(l);
 }
 
 // ════════════════════════════════════════════════
@@ -2265,14 +3296,378 @@ function hideModal(id){ document.getElementById(id).classList.remove('open'); }
 let toastT;
 function showToast(msg,type='green'){
   const t=document.getElementById('toast'),d=document.getElementById('toast-dot');
-  document.getElementById('toast-msg').textContent=msg;
+  const _el_toast_msg=document.getElementById('toast-msg');if(_el_toast_msg){_el_toast_msg.textContent=msg;}
   d.className='toast-dot '+(type==='amber'?'amber':'green');
   t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2800);
 }
 
+// ════════════════════════════════════════════════
+// TEAM USERS & LOGIN
+// ════════════════════════════════════════════════
+
+// ⚠️  After registering at portal.azure.com, paste your Application (client) ID here:
+const AZURE_CLIENT_ID = 'YOUR_CLIENT_ID_HERE';
+const AZURE_REDIRECT_URI = window.location.origin + window.location.pathname;
+
+// ⚠️  After registering at console.cloud.google.com, paste your Google Client ID here:
+const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID_HERE';
+
+let googleAccessToken = null;  // set after Google OAuth
+
+const TEAM_USERS = [
+  { id: 'taylor', name: 'Taylor Derrickson', initials: 'TD', role: 'Sales Rep', email: '' },
+  { id: 'add',    name: 'Add Team Member',   initials: '+',  role: 'Contact admin', email: '' },
+];
+
+let activeUser = TEAM_USERS[0];
+let msalInstance = null;
+let msalAccount = null;
+let selectedLoginUserId = TEAM_USERS[0].id;
+
+function renderLoginGrid() {
+  const grid = document.getElementById('login-user-grid');
+  if (!grid) return;
+  grid.innerHTML = TEAM_USERS.map(u => `
+    <div class="login-user-btn" id="lbtn-${u.id}" onclick="selectLoginUser('${u.id}')">
+      <div class="login-avatar" style="${u.id==='add'?'background:var(--border);color:var(--text-muted);font-size:22px':''}">${u.initials}</div>
+      <div class="login-user-name">${u.name}</div>
+      <div class="login-user-role">${u.role}</div>
+    </div>`).join('');
+  selectLoginUser(selectedLoginUserId);
+}
+
+function selectLoginUser(id) {
+  if (id === 'add') return;
+  selectedLoginUserId = id;
+  document.querySelectorAll('.login-user-btn').forEach(b => b.classList.remove('selected'));
+  const btn = document.getElementById('lbtn-' + id);
+  if (btn) btn.classList.add('selected');
+  const continueBtn = document.getElementById('login-continue-btn');
+  if (continueBtn) {
+    continueBtn.disabled = false;
+    const user = TEAM_USERS.find(u => u.id === id);
+    continueBtn.textContent = 'Continue as ' + (user ? user.name.split(' ')[0] : 'User');
+  }
+}
+
+function loginContinue() {
+  activeUser = TEAM_USERS.find(u => u.id === selectedLoginUserId) || TEAM_USERS[0];
+  storeAuthState();
+  updateSidebarUser();
+  hideLoginScreen();
+}
+
+function hideLoginScreen() {
+  const s = document.getElementById('login-screen');
+  if (!s) return;
+  s.classList.add('hidden');
+  setTimeout(() => { s.style.display = 'none'; }, 400);
+}
+
+function showUserMenu() {
+  const s = document.getElementById('login-screen');
+  if (!s) return;
+  s.style.display = 'flex';
+  requestAnimationFrame(() => s.classList.remove('hidden'));
+  renderLoginGrid();
+}
+
+function updateSidebarUser() {
+  const el_av = document.getElementById('sidebar-avatar');
+  const el_nm = document.getElementById('sidebar-name');
+  const el_rl = document.getElementById('sidebar-role');
+  if (el_av) el_av.textContent = activeUser.initials;
+  if (el_nm) el_nm.textContent = activeUser.name;
+  if (el_rl) el_rl.textContent = msalAccount ? '✓ Outlook connected' : activeUser.role;
+}
+
+// ════════════════════════════════════════════════
+// MICROSOFT MSAL / OUTLOOK
+// ════════════════════════════════════════════════
+
+function initMsal() {
+  if (AZURE_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') return;
+  if (typeof msal === 'undefined') return;
+  try {
+    msalInstance = new msal.PublicClientApplication({
+      auth: { clientId: AZURE_CLIENT_ID, authority: 'https://login.microsoftonline.com/common', redirectUri: AZURE_REDIRECT_URI },
+      cache: {
+        cacheLocation: 'localStorage',   // ← persists across browser restarts
+        storeAuthStateInCookie: true      // ← extra resilience for Safari / iOS
+      }
+    });
+    msalInstance.handleRedirectPromise().then(resp => {
+      if (resp) { msalAccount = resp.account; storeAuthState(); updateOutlookBadge(); updateSidebarUser(); }
+    });
+    // Silently restore existing session — no prompt needed
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
+      msalAccount = accounts[0];
+      updateOutlookBadge();
+      updateSidebarUser();
+      // Skip login screen if we have a cached user identity too
+      tryAutoLogin();
+    }
+  } catch(e) { console.warn('MSAL init:', e); }
+}
+
+function msalSignIn() {
+  if (AZURE_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
+    showToast('Paste your Azure Client ID in the file — see setup guide', 'amber'); return;
+  }
+  if (!msalInstance) { showToast('Deploy to GitHub Pages first to enable Outlook sign-in', 'amber'); return; }
+  msalInstance.loginPopup({ scopes: ['Mail.Send', 'User.Read'] })
+    .then(resp => {
+      msalAccount = resp.account;
+      googleAccessToken = null;
+      activeUser.email = resp.account.username;
+      storeAuthState();
+      updateOutlookBadge(); updateSidebarUser();
+      showToast('Outlook connected as ' + resp.account.username);
+    })
+    .catch(() => showToast('Sign-in cancelled', 'amber'));
+}
+
+function googleSignIn() {
+  if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
+    showToast('Paste your Google Client ID in the file — see setup guide', 'amber'); return;
+  }
+  if (typeof google === 'undefined' || !google.accounts) {
+    showToast('Deploy to GitHub Pages first to enable Gmail sign-in', 'amber'); return;
+  }
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/gmail.send',
+    callback: (resp) => {
+      if (resp.error) { showToast('Google sign-in failed', 'amber'); return; }
+      googleAccessToken = resp.access_token;
+      // Store expiry (Google tokens last 1 hour)
+      googleTokenExpiry = Date.now() + (resp.expires_in || 3600) * 1000;
+      msalAccount = null;
+      fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: 'Bearer ' + googleAccessToken }
+      }).then(r => r.json()).then(info => {
+        activeUser.email = info.email || '';
+        storeAuthState();
+        updateOutlookBadge(); updateSidebarUser();
+        showToast('Gmail connected as ' + (info.email || 'user'));
+      });
+    }
+  });
+  client.requestAccessToken();
+}
+
+// ── Auth persistence helpers ────────────────────────────────────────────────
+
+let googleTokenExpiry = 0;
+let googleTokenClient = null; // reusable token client for silent refresh
+
+// Save auth state to localStorage so it survives page refresh
+function storeAuthState() {
+  try {
+    const state = {
+      provider: msalAccount ? 'msal' : (googleAccessToken ? 'google' : null),
+      email: activeUser.email || '',
+      userId: activeUser.id || '',
+      googleToken: googleAccessToken || null,
+      googleExpiry: googleTokenExpiry || 0,
+    };
+    localStorage.setItem('tgfc_auth', JSON.stringify(state));
+  } catch(e) {}
+}
+
+// On page load: restore auth state without requiring sign-in again
+function restoreAuthState() {
+  try {
+    const raw = localStorage.getItem('tgfc_auth');
+    if (!raw) return false;
+    const state = JSON.parse(raw);
+    if (!state.provider) return false;
+
+    // Restore active user
+    if (state.userId) {
+      const u = TEAM_USERS.find(x => x.id === state.userId);
+      if (u) { activeUser = u; activeUser.email = state.email || ''; }
+    }
+
+    if (state.provider === 'google' && state.googleToken) {
+      const expired = state.googleExpiry && Date.now() > state.googleExpiry;
+      if (!expired) {
+        // Token still valid — restore silently
+        googleAccessToken = state.googleToken;
+        googleTokenExpiry = state.googleExpiry;
+        updateOutlookBadge(); updateSidebarUser();
+        return true;
+      } else {
+        // Token expired — trigger silent refresh (no popup if user already consented)
+        silentGoogleRefresh();
+        return false; // badge will update after refresh
+      }
+    }
+
+    if (state.provider === 'msal') {
+      // MSAL restores itself via localStorage — just need to set the badge
+      // Account will be found by initMsal() via getAllAccounts()
+      return false; // let initMsal handle it
+    }
+  } catch(e) {}
+  return false;
+}
+
+// Silent Google token refresh — no popup if user already consented
+function silentGoogleRefresh() {
+  if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_HERE') return;
+  if (typeof google === 'undefined' || !google.accounts) return;
+  const email = activeUser.email;
+  if (!email) return;
+
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/gmail.send',
+    hint: email,       // pre-fills the account — no account picker shown
+    prompt: '',        // empty string = silent if already consented, popup only if needed
+    callback: (resp) => {
+      if (resp.error) return; // silent fail — user will be prompted next send
+      googleAccessToken = resp.access_token;
+      googleTokenExpiry = Date.now() + (resp.expires_in || 3600) * 1000;
+      storeAuthState();
+      updateOutlookBadge(); updateSidebarUser();
+    }
+  });
+  client.requestAccessToken({ prompt: '' });
+}
+
+// Auto-refresh Google token 5 min before it expires
+function scheduleGoogleRefresh() {
+  if (!googleAccessToken || !googleTokenExpiry) return;
+  const msUntilExpiry = googleTokenExpiry - Date.now();
+  const refreshIn = Math.max(msUntilExpiry - 5 * 60 * 1000, 0); // 5 min before expiry
+  setTimeout(() => {
+    if (googleAccessToken) silentGoogleRefresh();
+  }, refreshIn);
+}
+
+// Try to skip login screen for returning users
+function tryAutoLogin() {
+  try {
+    const raw = localStorage.getItem('tgfc_auth');
+    if (!raw) return;
+    const state = JSON.parse(raw);
+    if (!state.userId) return;
+    const u = TEAM_USERS.find(x => x.id === state.userId);
+    if (u) {
+      activeUser = u;
+      activeUser.email = state.email || '';
+      selectedLoginUserId = u.id;
+      updateSidebarUser();
+      hideLoginScreen();
+    }
+  } catch(e) {}
+}
+
+function updateOutlookBadge() {
+  const badge = document.getElementById('outlook-badge');
+  const dot   = document.getElementById('outlook-dot');
+  const label = document.getElementById('outlook-badge-label');
+  if (!badge) return;
+  const connected = msalAccount || googleAccessToken;
+  if (connected) {
+    badge.classList.add('connected');
+    if (dot) dot.style.background = 'var(--green)';
+    const email = msalAccount ? msalAccount.username : (activeUser.email || 'Gmail connected');
+    if (label) label.textContent = email;
+  } else {
+    badge.classList.remove('connected');
+    if (dot) dot.style.background = 'var(--text-muted)';
+    if (label) label.textContent = 'Connect Email';
+  }
+}
+
+function outlookBadgeClick() {
+  if (msalAccount || googleAccessToken) {
+    if (msalAccount && msalInstance) msalInstance.logoutPopup({ account: msalAccount }).catch(()=>{});
+    msalAccount = null;
+    googleAccessToken = null;
+    googleTokenExpiry = 0;
+    activeUser.email = '';
+    try { localStorage.removeItem('tgfc_auth'); } catch(e) {}
+    updateOutlookBadge(); updateSidebarUser();
+    showToast('Email disconnected');
+  } else {
+    showUserMenu();
+  }
+}
+
+async function getAccessToken() {
+  if (!msalInstance || !msalAccount) return null;
+  try {
+    const r = await msalInstance.acquireTokenSilent({ scopes: ['Mail.Send'], account: msalAccount });
+    return r.accessToken;
+  } catch(e) {
+    const r = await msalInstance.acquireTokenPopup({ scopes: ['Mail.Send'], account: msalAccount });
+    return r.accessToken;
+  }
+}
+
+// Unified send — routes to whichever provider is connected
+async function sendViaEmail(to, subject, body) {
+  if (msalAccount) return sendViaOutlookGraph(to, subject, body);
+  if (googleAccessToken) return sendViaGmail(to, subject, body);
+  showToast('Connect Outlook or Gmail first', 'amber');
+  return false;
+}
+
+async function sendViaOutlookGraph(to, subject, body) {
+  const token = await getAccessToken();
+  if (!token) { showToast('Connect Outlook first', 'amber'); return false; }
+  const resp = await fetch('https://graph.microsoft.com/v1.0/me/sendMail', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: {
+        subject,
+        body: { contentType: 'Text', content: body },
+        toRecipients: [{ emailAddress: { address: to } }]
+      },
+      saveToSentItems: true
+    })
+  });
+  return resp.ok;
+}
+
+async function sendViaGmail(to, subject, body) {
+  if (!googleAccessToken) { showToast('Connect Gmail first', 'amber'); return false; }
+  const raw = ['To: ' + to, 'Subject: ' + subject, 'Content-Type: text/plain; charset=utf-8', '', body].join('\r\n');
+  const encoded = btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  const resp = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + googleAccessToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ raw: encoded })
+  });
+  return resp.ok;
+}
+
+// Alias so existing callers work
+const sendViaOutlook = sendViaEmail;
+
+// ════════════════════════════════════════════════
 // INIT
-renderDashboard();
-setLeadsTab('active');
+document.addEventListener('DOMContentLoaded', function() {
+  restoreTemplates();
+  restoreOffersState();
+  renderDashboard();
+  setLeadsTab('active');
+  renderLoginGrid();
+  // Restore saved auth state first (may skip login screen for returning users)
+  const authRestored = restoreAuthState();
+  if (authRestored) {
+    scheduleGoogleRefresh();
+  }
+  // Init MSAL after — it reads its own localStorage cache and calls tryAutoLogin()
+  initMsal();
+  updateOutlookBadge();
+});
+
 </script>
 </body>
 </html>
